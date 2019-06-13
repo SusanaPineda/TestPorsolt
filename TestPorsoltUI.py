@@ -19,6 +19,7 @@ import ctypes
 import matplotlib.pyplot as plt
 import ctypes 
 import pandas as pd
+
 from matplotlib import animation
 from matplotlib import style
 from scipy.interpolate import InterpolatedUnivariateSpline
@@ -99,6 +100,7 @@ def back_Automatico():
 def selectVideo_Automatico():
     global Automatico_video_name
     raiz.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("mp4","*.mp4"),("all files","*.*")))
+    print(raiz.filename)
     url = raiz.filename
     Automatico_video_name = url 
 
@@ -156,7 +158,8 @@ def exec(canvas1, video):
 
     #### Inicio Variables Locales ####
     #Inicio del programa
-    seleccion = True 
+    seleccion = False 
+    seleccionado = False
     #Primer frame del video
     hsv = None 
     #Posicion del elemento que queremos seguir
@@ -193,12 +196,20 @@ def exec(canvas1, video):
     totContQuieta = 0
 
     #VariablesGrafica
-    contadorGrafica = 50;
+    contadorGrafica = 50
     ####Fin Variables Locales ####
 
     cap = cv2.VideoCapture(video)
     while(cap.isOpened()):
         MutexAutomatico.acquire()
+        k = cv2.waitKeyEx(100) & 0xFF
+        print(k)
+        if k == ord('q'):
+            break
+        elif k == ord('s'):
+            cv2.waitKey(0)
+            seleccion = True
+        
         
         if stopAutomatico == True:
             MutexAutomatico.release()
@@ -212,7 +223,7 @@ def exec(canvas1, video):
                 hsv = cv2.cvtColor(frame_video,cv2.COLOR_BGR2HSV)
 
                 #Comprobamos si estamos en el momento de seleccion
-                while(seleccion):
+                if(seleccion):
                     #cv2.imshow("image",frame)
                     frame_image = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(frame_video,cv2.COLOR_BGR2RGB), "RGB").resize((600,300), Image.ANTIALIAS))
                     canvas1.config(image=frame_image)
@@ -236,58 +247,60 @@ def exec(canvas1, video):
 
                     posAnterior[0] = int(M[0])
                     posAnterior[1] = int(M[1])
-
+                    cv2.waitKey(5)
+                    seleccionado = True
                     seleccion = False
 
-                dst = cv2.calcBackProject([hsv],[0],roi_hist,[0,180],1)
-                ret,track_window = cv2.CamShift(dst, (track_window[0],track_window[1],track_window[2],track_window[3]), term_crit)
-                res = cv2.bitwise_and(frame_video,frame_video)
+                if seleccionado == True :
+                    dst = cv2.calcBackProject([hsv],[0],roi_hist,[0,180],1)
+                    ret,track_window = cv2.CamShift(dst, (track_window[0],track_window[1],track_window[2],track_window[3]), term_crit)
+                    res = cv2.bitwise_and(frame_video,frame_video)
 
-                #Mostrar por pantalla CamShift
-                pts = cv2.boxPoints(ret)
-                pts = np.int0(pts)
-                img2 = cv2.polylines(res,[pts],True,255,2)
+                    #Mostrar por pantalla CamShift
+                    pts = cv2.boxPoints(ret)
+                    pts = np.int0(pts)
+                    img2 = cv2.polylines(res,[pts],True,255,2)
 
-                #Almacenamos la posicion del cuadrado
-                M[0] = track_window[0] + float(track_window[2])/2.
-                M[1] = track_window[1] + float(track_window[3])/2.
-                cntX = int(M[0])
-                cntY = int(M[1])
+                    #Almacenamos la posicion del cuadrado
+                    M[0] = track_window[0] + float(track_window[2])/2.
+                    M[1] = track_window[1] + float(track_window[3])/2.
+                    cntX = int(M[0])
+                    cntY = int(M[1])
 
-                #Dibujamos por pantalla
-                cv2.circle(res,(cntX,cntY),5,(130,50,200),-1)
-                #cv2.putText(res,str(cntX)+','+str(cntY),(30, 60), font, 2, (130,50,200),3,cv2.LINE_AA)
+                    #Dibujamos por pantalla
+                    cv2.circle(res,(cntX,cntY),5,(130,50,200),-1)
+                    #cv2.putText(res,str(cntX)+','+str(cntY),(30, 60), font, 2, (130,50,200),3,cv2.LINE_AA)
 
-                #Calculamos la velocidad
-                if(contadorFPS == 6):
-                    #Obtenemos la posicion de hace 6 frames
-                    x0 = posAnterior[len(posAnterior)-2]
-                    y0 = posAnterior[len(posAnterior)-1]
-                    #Obtenemos la posicion del frame actual
-                    x1 = cntX
-                    y1 = cntY
-                    #Obtenemos la diferencia entre el frame1 y el frame0
-                    diferencia.append(abs(x0-x1))
-                    diferencia.append(abs(y0-y1))
-                    #Obtenemos la velocidad tomando como tiempo un cuarto de un segundo (cada 6 frames)
-                    velocidad.append(diferencia[(len(diferencia)-2)]/0.5)
-                    velocidad.append(diferencia[(len(diferencia)-1)]/0.5)
-                    #Obtenemos la velocidad total
-                    vX = velocidad[len(velocidad)-2]
-                    vY = velocidad[len(velocidad)-1]
-                    velTotal = np.array([vX,vY])
-                    velTotal = np.linalg.norm(velTotal)
-                    mod.append(velTotal)
-                    #Comprobamos la velocidad y contamos el tiempo
-                    if (velTotal>17):
-                        if(nadandoBool):
-                            Automatico_nado = Automatico_nado + 0.25
-                            totContNado = totContNado + 0.25
-                            Automatico_nadoS.set(str(Automatico_nado))
-                            IndicadorTxt.config (text = "Nadando")
-                            Indicador.config(bg = "#3847CD")
-                        elif(quietaBool):
-                            CNado = CNado-1
+                    #Calculamos la velocidad
+                    if(contadorFPS == 6):
+                        #Obtenemos la posicion de hace 6 frames
+                        x0 = posAnterior[len(posAnterior)-2]
+                        y0 = posAnterior[len(posAnterior)-1]
+                        #Obtenemos la posicion del frame actual
+                        x1 = cntX
+                        y1 = cntY
+                        #Obtenemos la diferencia entre el frame1 y el frame0
+                        diferencia.append(abs(x0-x1))
+                        diferencia.append(abs(y0-y1))
+                        #Obtenemos la velocidad tomando como tiempo un cuarto de un segundo (cada 6 frames)
+                        velocidad.append(diferencia[(len(diferencia)-2)]/0.5)
+                        velocidad.append(diferencia[(len(diferencia)-1)]/0.5)
+                        #Obtenemos la velocidad total
+                        vX = velocidad[len(velocidad)-2]
+                        vY = velocidad[len(velocidad)-1]
+                        velTotal = np.array([vX,vY])
+                        velTotal = np.linalg.norm(velTotal)
+                        mod.append(velTotal)
+                        #Comprobamos la velocidad y contamos el tiempo
+                        if (velTotal>17):
+                            if(nadandoBool):
+                                Automatico_nado = Automatico_nado + 0.25
+                                totContNado = totContNado + 0.25
+                                Automatico_nadoS.set(str(Automatico_nado))
+                                IndicadorTxt.config (text = "Nadando")
+                                Indicador.config(bg = "#3847CD")
+                            elif(quietaBool):
+                                CNado = CNado-1
                             if(CNado > 0):
                                 Automatico_quieta = Automatico_quieta + 0.25
                                 totContQuieta = totContQuieta + 0.25
@@ -307,43 +320,49 @@ def exec(canvas1, video):
                             IndicadorTxt.config(text = "Quieta")
                             Indicador.config(bg = "#6B74CA")
                         elif(nadandoBool):
-                            CQuieta = CQuieta - 1
-                            if(CQuieta>0):
-                                Automatico_nado = Automatico_nado + 0.25
-                                totContNado = totContNado + 0.25
-                            elif(CQuieta==0):
-                                CNado = 4
-                                CQuieta = 4
-                                Vector_Nado_Automatico.append(totContNado)
-                                totContNado = 0
-                                nadandoBool = False
-                                quietaBool = True
+                                CQuieta = CQuieta - 1
+                                if(CQuieta>0):
+                                    Automatico_nado = Automatico_nado + 0.25
+                                    totContNado = totContNado + 0.25
+                                elif(CQuieta==0):
+                                    CNado = 4
+                                    CQuieta = 4
+                                    Vector_Nado_Automatico.append(totContNado)
+                                    totContNado = 0
+                                    nadandoBool = False
+                                    quietaBool = True
 
-                    #Actualizamos la posicion anterior y aumentamos el contador
-                    posAnterior.append(cntX)
-                    posAnterior.append(cntY)
-                    #Pintamos la grafica (ELIMINAR)
-                        #cv2.line(graf,(contadorGrafica,(206-int(mod[len(mod)-2]))),((contadorGrafica+3),(206-int(mod[len(mod)-1]))),(0,0,0),1)
-                        #contadorGrafica = contadorGrafica+3
-                        #cv2.imshow("grafica",graf)
-                    #Limpar contador
-                    contadorFPS = 0
+                        #Actualizamos la posicion anterior y aumentamos el contador
+                        posAnterior.append(cntX)
+                        posAnterior.append(cntY)
+                        #Pintamos la grafica (ELIMINAR)
+                            #cv2.line(graf,(contadorGrafica,(206-int(mod[len(mod)-2]))),((contadorGrafica+3),(206-int(mod[len(mod)-1]))),(0,0,0),1)
+                            #contadorGrafica = contadorGrafica+3
+                            #cv2.imshow("grafica",graf)
+                        #Limpar contador
+                        contadorFPS = 0
 
-                contadorFPS = contadorFPS + 1
-                #cv2.putText(res, str(mod[len(mod)-1]),(30,120),font,2, (130,50,200),3,cv2.LINE_AA)
+                    contadorFPS = contadorFPS + 1
+                    #cv2.putText(res, str(mod[len(mod)-1]),(30,120),font,2, (130,50,200),3,cv2.LINE_AA)
             
-                frame_image2 = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(res,cv2.COLOR_BGR2RGB),"RGB").resize((600,300), Image.ANTIALIAS))
-                canvas1.config(image=frame_image2)
-                canvas1.config(width="737",height="300")
-                canvas1.place(x=126, y=180)
-                canvas1.image = frame_image2
+                    frame_image2 = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(res,cv2.COLOR_BGR2RGB),"RGB").resize((600,300), Image.ANTIALIAS))
+                    canvas1.config(image=frame_image2)
+                    canvas1.config(width="737",height="300")
+                    canvas1.place(x=126, y=180)
+                    canvas1.image = frame_image2
+                else:
+                    ph = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(frame_video,cv2.COLOR_BGR2RGB),"RGB").resize((600,300), Image.ANTIALIAS))
+                    canvas1.config(image=ph)
+                    canvas1.config(width="737",height="300")
+                    canvas1.place(x=126, y=180)
+                    canvas1.image = ph
                 
-        else:
-            MutexAutomatico.release()
-            cap.release()
-            cv2.destroyAllWindows()
+            else:
+                MutexAutomatico.release()
+                cap.release()
+                cv2.destroyAllWindows()
+                
 
-    
     cap.release()
     cv2.destroyAllWindows()
             
