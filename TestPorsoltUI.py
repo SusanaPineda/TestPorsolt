@@ -62,9 +62,10 @@ Manual_Porcentaje_QuietaS = StringVar()
 Automatico_video_name = ""
 stopAutomatico = True
 MutexAutomatico = Lock()
+waitKey_fps = 15
 ### VARIABLES GRAFICA ###
 mod = [0]
-
+seleccion = False 
 ### VARIABLES CONTADOR ###
 Automatico_nado = 0
 Automatico_quieta = 0
@@ -116,8 +117,13 @@ def stream_Automatico(canvas1):
     thread.daemon = 1
     thread.start()
 
-def exec(canvas1, video):
-    global mod, Automatico_nado, Automatico_quieta, Vector_Nado_Automatico, Vector_Quieta_Automatico, stopAutomatico
+def seleccionar_Automatico():
+    global waitKey_fps, seleccion
+    waitKey_fps = 0
+    seleccion = True
+
+def exec(canvas1, video ):
+    global mod, Automatico_nado, Automatico_quieta, Vector_Nado_Automatico, Vector_Quieta_Automatico, stopAutomatico,seleccion,waitKey_fps
 
     ### REAJUSTE DEL FRAME4 ###
     frame4.config(width = "2100", height="1300", bg="#242424")
@@ -153,6 +159,10 @@ def exec(canvas1, video):
     btnParar = Button(frame4, text="Parar")
     btnParar.config(width="17", height="2",font=("Helvetica", 15), bg="#3F3F3F", foreground="white", command = parar_Automatico)
     btnParar.place(x=550, y=500)
+    
+    btnSeleccionar = Button(frame4, text="Seleccionar")
+    btnSeleccionar.config(width="17", height="2",font=("Helvetica", 15), bg="#3F3F3F", foreground="white", command = seleccionar_Automatico)
+    btnSeleccionar.place(x=550, y=500)
     
     ### FIN REAJUSTE DEL FRAME4 ###
 
@@ -202,15 +212,9 @@ def exec(canvas1, video):
     cap = cv2.VideoCapture(video)
     while(cap.isOpened()):
         MutexAutomatico.acquire()
-        k = cv2.waitKeyEx(100) & 0xFF
-        print(k)
-        if k == ord('q'):
-            break
-        elif k == ord('s'):
-            cv2.waitKey(0)
-            seleccion = True
         
-        
+        cv2.waitKey(waitKey_fps) & 0xFF
+
         if stopAutomatico == True:
             MutexAutomatico.release()
             #Obtenemos cada frame del video
@@ -247,7 +251,8 @@ def exec(canvas1, video):
 
                     posAnterior[0] = int(M[0])
                     posAnterior[1] = int(M[1])
-                    cv2.waitKey(5)
+                    btnSeleccionar.place_forget()
+                    waitKey_fps = 15
                     seleccionado = True
                     seleccion = False
 
@@ -273,6 +278,7 @@ def exec(canvas1, video):
 
                     #Calculamos la velocidad
                     if(contadorFPS == 6):
+                        
                         #Obtenemos la posicion de hace 6 frames
                         x0 = posAnterior[len(posAnterior)-2]
                         y0 = posAnterior[len(posAnterior)-1]
@@ -294,43 +300,48 @@ def exec(canvas1, video):
                         #Comprobamos la velocidad y contamos el tiempo
                         if (velTotal>17):
                             if(nadandoBool):
+                               
                                 Automatico_nado = Automatico_nado + 0.25
                                 totContNado = totContNado + 0.25
                                 Automatico_nadoS.set(str(Automatico_nado))
                                 IndicadorTxt.config (text = "Nadando")
                                 Indicador.config(bg = "#3847CD")
                             elif(quietaBool):
+                               
                                 CNado = CNado-1
-                            if(CNado > 0):
-                                Automatico_quieta = Automatico_quieta + 0.25
-                                totContQuieta = totContQuieta + 0.25
-                            elif(CNado == 0):
-                                CNado = 4
-                                CQuieta = 4
-                                Vector_Quieta_Automatico.append(totContQuieta)
-                                totContQuieta = 0
-                                quietaBool = False
-                                nadandoBool = True
-                    
-                    else:
-                        if(quietaBool):
-                            Automatico_quieta = Automatico_quieta + 0.25
-                            totContQuieta = totContQuieta + 0.25
-                            Automatico_quietaS.set(str(Automatico_quieta))
-                            IndicadorTxt.config(text = "Quieta")
-                            Indicador.config(bg = "#6B74CA")
-                        elif(nadandoBool):
-                                CQuieta = CQuieta - 1
-                                if(CQuieta>0):
-                                    Automatico_nado = Automatico_nado + 0.25
-                                    totContNado = totContNado + 0.25
-                                elif(CQuieta==0):
+                                if(CNado > 0):
+                                    
+                                    Automatico_quieta = Automatico_quieta + 0.25
+                                    totContQuieta = totContQuieta + 0.25
+                                elif(CNado == 0):
+                                    
                                     CNado = 4
                                     CQuieta = 4
-                                    Vector_Nado_Automatico.append(totContNado)
-                                    totContNado = 0
-                                    nadandoBool = False
-                                    quietaBool = True
+                                    Vector_Quieta_Automatico.append(totContQuieta)
+                                    totContQuieta = 0
+                                    quietaBool = False
+                                    nadandoBool = True
+                    
+                        else:
+                            if(quietaBool):
+                               
+                                Automatico_quieta = Automatico_quieta + 0.25
+                                totContQuieta = totContQuieta + 0.25
+                                Automatico_quietaS.set(str(Automatico_quieta))
+                                IndicadorTxt.config(text = "Quieta")
+                                Indicador.config(bg = "#6B74CA")
+                            elif(nadandoBool):
+                                    CQuieta = CQuieta - 1
+                                    if(CQuieta>0):
+                                        Automatico_nado = Automatico_nado + 0.25
+                                        totContNado = totContNado + 0.25
+                                    elif(CQuieta==0):
+                                        CNado = 4
+                                        CQuieta = 4
+                                        Vector_Nado_Automatico.append(totContNado)
+                                        totContNado = 0
+                                        nadandoBool = False
+                                        quietaBool = True
 
                         #Actualizamos la posicion anterior y aumentamos el contador
                         posAnterior.append(cntX)
@@ -717,7 +728,7 @@ Cimg8 = Label(frame3, image = img8)
 Cimg8.config(width="68",height="102",bg="#C4C4C4")
 Cimg8.place(x=1100, y= 300)
 
-Instrucciones = Label(frame3,text="Al presionar el botón aparecerá una nueva \n ventana en la cual habrá que seleccionar la \n marca del sujeto y presionar enter.",bg="#C4C4C4",font=("Helvetica", 15))
+Instrucciones = Label(frame3,text="Al presionar el botón seleccionar aparecerá \n una nueva ventana en la cual habrá que \n seleccionar la marca del sujeto \n y presionar enter.",bg="#C4C4C4",font=("Helvetica", 15))
 Instrucciones.place(x=750, y=200)
 
 btnIniciar = Button(frame3, text="Iniciar")
