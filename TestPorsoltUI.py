@@ -100,7 +100,7 @@ def back_Automatico():
 
 def selectVideo_Automatico():
     global Automatico_video_name
-    raiz.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("mp4","*.mp4"),("all files","*.*")))
+    raiz.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("mp4","*.mp4"),("MTS","*.MTS"),("all files","*.*")))
     print(raiz.filename)
     url = raiz.filename
     Automatico_video_name = url 
@@ -146,11 +146,11 @@ def exec(canvas1, video ):
     rec2.place(x=1048, y=180)
 
     ### Sustituir por la gráfica ###
-    contNado2 = Label(frame4, text = "Tiempo nadando: ",bg="#C4C4C4",font=("Helvetica", 20))
+    contNado2 = Label(frame4, text = "Tiempo Nado: ",bg="#C4C4C4",font=("Helvetica", 20))
     contNado2.place(x=1100, y=250)
     contadorNado2 = Label(frame4,bg="#C4C4C4",font=("Helvetica", 20),textvariable=Automatico_nadoS)
     contadorNado2.place(x=1400, y=250)
-    contQuieta2 = Label(frame4, text = "Tiempo Quieta: ",bg="#C4C4C4",font=("Helvetica", 20))
+    contQuieta2 = Label(frame4, text = "Tiempo Reposo: ",bg="#C4C4C4",font=("Helvetica", 20))
     contQuieta2.place(x=1100, y=350)
     contadorQuieta2 = Label(frame4,bg="#C4C4C4",font=("Helvetica", 20),textvariable=Automatico_quietaS)
     contadorQuieta2.place(x=1400, y=350)
@@ -210,6 +210,8 @@ def exec(canvas1, video ):
     ####Fin Variables Locales ####
 
     cap = cv2.VideoCapture(video)
+    m = cap.get(cv2.CAP_PROP_FPS)
+    print("fps: "+str(m))
     while(cap.isOpened()):
         MutexAutomatico.acquire()
         
@@ -410,19 +412,19 @@ def parar_Automatico():
     rec2.config(width="105",height="25")
     rec2.place(x=1048, y=180)
 
-    contNado = Label(frame5, text = "Tiempo nadando: ",bg="#C4C4C4",font=("Helvetica", 20))
+    contNado = Label(frame5, text = "Tiempo Nado: ",bg="#C4C4C4",font=("Helvetica", 20))
     contNado.place(x=1100, y=200)
     contadorNado = Label(frame5,bg="#C4C4C4",font=("Helvetica", 20),textvariable=Automatico_nadoS)
     contadorNado.place(x=1400, y=200)
-    contQuieta = Label(frame5, text = "Tiempo Quieta: ",bg="#C4C4C4",font=("Helvetica", 20))
+    contQuieta = Label(frame5, text = "Tiempo Reposo: ",bg="#C4C4C4",font=("Helvetica", 20))
     contQuieta.place(x=1100, y=300)
     contadorQuieta = Label(frame5,bg="#C4C4C4",font=("Helvetica", 20),textvariable=Automatico_quietaS)
     contadorQuieta.place(x=1400, y=300)
-    porNado = Label(frame5, text = "Porcentaje Nadando: ",bg="#C4C4C4",font=("Helvetica", 20))
+    porNado = Label(frame5, text = "Porcentaje Nado: ",bg="#C4C4C4",font=("Helvetica", 20))
     porNado.place(x=1100, y=400)
     porcentajeNado = Label(frame5,bg="#C4C4C4",font=("Helvetica", 20),textvariable = Automatico_Porcentaje_NadoS)
     porcentajeNado.place(x=1400, y=400)
-    porcQuieta = Label(frame5, text = "Porcentaje Quieta: ",bg="#C4C4C4",font=("Helvetica", 20))
+    porcQuieta = Label(frame5, text = "Porcentaje Reposo: ",bg="#C4C4C4",font=("Helvetica", 20))
     porcQuieta.place(x=1100, y=500)
     porcentajerQuieta = Label(frame5,bg="#C4C4C4",font=("Helvetica", 20),textvariable = Automatico_Porcentaje_QuietaS)
     porcentajerQuieta.place(x=1400, y=500)
@@ -440,7 +442,7 @@ def parar_Automatico():
 def exportar_Automatico():
     global Automatico_nado, Automatico_quieta, Porcentaje_Automatico_Nado, Porcentaje_Automatico_Quieta,Vector_Nado_Automatico, Vector_Quieta_Automatico
     raiz.filename = filedialog.asksaveasfilename(initialdir = "/", title = "Select directory",filetypes = (("xlsx","*.xlsx"),("all files","*.*")))
-    url = raiz.filename
+    url = raiz.filename+".xlsx"
 
     if(len(Vector_Nado_Automatico)>len(Vector_Quieta_Automatico)):
         while(len(Vector_Quieta_Automatico)<len(Vector_Nado_Automatico)):
@@ -514,14 +516,14 @@ def contador():
     global Manual_inicializado, Manual_nadando, Manual_quietaB, Manual_nado, Manual_quieta, Manual_cInit, Manual_cFin, Vector_Nado_Manual, Vector_Quieta_Manual
 
     if(Manual_inicializado == False):
-        btnIniciar['text'] = 'quieta'
+        btnIniciar['text'] = 'Quieta'
         Manual_inicializado = True
         Manual_nadando = True
         Manual_cInit = time()
         
         
     elif(Manual_nadando == True):
-        btnIniciar['text'] = 'nadando'
+        btnIniciar['text'] = 'Nadando'
         Manual_nadando = False
         Manual_quietaB = True
         Manual_cFin = time() - Manual_cInit
@@ -533,7 +535,7 @@ def contador():
         
 
     elif(Manual_quietaB == True):
-        btnIniciar['text'] = 'quieta'
+        btnIniciar['text'] = 'Quieta'
         Manual_nadando = True
         Manual_quietaB = False
         Manual_cFin = time() - Manual_cInit
@@ -560,7 +562,7 @@ def exportar_Manual():
     global Manual_nado, Manual_quieta, Porcentaje_Manual_Nado, Porcentaje_Manual_Quieta,Vector_Nado_Manual, Vector_Quieta_Manual
 
     raiz.filename = filedialog.asksaveasfilename(initialdir = "/", title = "Select directory",filetypes = (("xlsx","*.xlsx"),("all files","*.*")))
-    url = raiz.filename
+    url = raiz.filename+".xlsx"
 
     if(len(Vector_Nado_Manual)>len(Vector_Quieta_Manual)):
         while(len(Vector_Quieta_Manual)<len(Vector_Nado_Manual)):
@@ -579,7 +581,7 @@ def exportar_Manual():
     df.to_excel(url, sheet_name='example')
 
 def selectVideo_Manual(canvas4):
-    raiz.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("mp4","*.mp4"),("all files","*.*")))
+    raiz.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("mp4","*.mp4"),("MTS","*.MTS"),("all files","*.*")))
     url = raiz.filename
     video_name = url 
     video = imageio.get_reader(video_name)
@@ -820,11 +822,11 @@ Cimg5 = Label(frame7, image = img5)
 Cimg5.config(width="68",height="102",bg="#C4C4C4")
 Cimg5.place(x=1100, y= 300)
 
-contNado = Label(frame7, text = "Tiempo nadando: ",bg="#C4C4C4",font=("Helvetica", 15))
+contNado = Label(frame7, text = "Tiempo Nado: ",bg="#C4C4C4",font=("Helvetica", 15))
 contNado.place(x=750, y=200)
 contadorNado = Label(frame7,bg="#C4C4C4",font=("Helvetica", 15),textvariable=Manual_nadoS)
 contadorNado.place(x=950, y=200)
-contQuieta = Label(frame7, text = "Tiempo Quieta: ",bg="#C4C4C4",font=("Helvetica", 15))
+contQuieta = Label(frame7, text = "Tiempo Reposo: ",bg="#C4C4C4",font=("Helvetica", 15))
 contQuieta.place(x=750, y=250)
 contadorQuieta = Label(frame7,bg="#C4C4C4",font=("Helvetica", 15),textvariable=Manual_quietaS)
 contadorQuieta.place(x=950, y=250)
@@ -857,19 +859,19 @@ rec2 = Label(frame8,bg="#C4C4C4")
 rec2.config(width="70",height="18")
 rec2.place(x=710, y=150)
 
-contNado = Label(frame8, text = "Tiempo nadando: ",bg="#C4C4C4",font=("Helvetica", 15))
+contNado = Label(frame8, text = "Tiempo Nado: ",bg="#C4C4C4",font=("Helvetica", 15))
 contNado.place(x=750, y=200)
 contadorNado = Label(frame8,bg="#C4C4C4",font=("Helvetica", 15),textvariable=Manual_nadoS)
 contadorNado.place(x=950, y=200)
-contQuieta = Label(frame8, text = "Tiempo Quieta: ",bg="#C4C4C4",font=("Helvetica", 15))
+contQuieta = Label(frame8, text = "Tiempo Reposo: ",bg="#C4C4C4",font=("Helvetica", 15))
 contQuieta.place(x=750, y=250)
 contadorQuieta = Label(frame8,bg="#C4C4C4",font=("Helvetica", 15),textvariable=Manual_quietaS)
 contadorQuieta.place(x=950, y=250)
-porNado = Label(frame8, text = "Porcentaje Nadando: ",bg="#C4C4C4",font=("Helvetica", 15))
+porNado = Label(frame8, text = "Porcentaje Nado: ",bg="#C4C4C4",font=("Helvetica", 15))
 porNado.place(x=750, y=300)
 porcentajeNado = Label(frame8,bg="#C4C4C4",font=("Helvetica", 15),textvariable = Manual_Porcentaje_NadoS)
 porcentajeNado.place(x=950, y=300)
-porcQuieta = Label(frame8, text = "Porcentaje Quieta: ",bg="#C4C4C4",font=("Helvetica", 15))
+porcQuieta = Label(frame8, text = "Porcentaje Reposo: ",bg="#C4C4C4",font=("Helvetica", 15))
 porcQuieta.place(x=750, y=350)
 porcentajeQuieta = Label(frame8,bg="#C4C4C4",font=("Helvetica", 15),textvariable = Manual_Porcentaje_QuietaS)
 porcentajeQuieta.place(x=950, y=350)
