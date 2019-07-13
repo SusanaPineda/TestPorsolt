@@ -40,6 +40,9 @@ Manual_nadando = False
 Manual_quietaB = False
 stopManual = True
 MutexManual = Lock()
+Manual_video_name = ""
+mod_manual = [0]
+seleccion_Manual = True
 ### VARIABLES EXCEL ###
 Porcentaje_Manual_Nado = 0
 Porcentaje_Manual_Quieta = 0
@@ -200,8 +203,8 @@ def exec(canvas1, video ):
     #Variables contador de nado
     nadandoBool = True
     quietaBool = False
-    CNado = 4
-    CQuieta = 4
+    CNado = 2
+    CQuieta = 2
     totContNado = 0
     totContQuieta = 0
 
@@ -279,7 +282,7 @@ def exec(canvas1, video ):
                     #cv2.putText(res,str(cntX)+','+str(cntY),(30, 60), font, 2, (130,50,200),3,cv2.LINE_AA)
 
                     #Calculamos la velocidad
-                    if(contadorFPS == 6):
+                    if(contadorFPS == 5):
                         
                         #Obtenemos la posicion de hace 6 frames
                         x0 = posAnterior[len(posAnterior)-2]
@@ -303,8 +306,8 @@ def exec(canvas1, video ):
                         if (velTotal>17):
                             if(nadandoBool):
                                
-                                Automatico_nado = Automatico_nado + 0.25
-                                totContNado = totContNado + 0.25
+                                Automatico_nado = Automatico_nado + 0.2
+                                totContNado = totContNado + 0.2
                                 Automatico_nadoS.set(str(Automatico_nado))
                                 IndicadorTxt.config (text = "Nadando")
                                 Indicador.config(bg = "#3847CD")
@@ -313,12 +316,12 @@ def exec(canvas1, video ):
                                 CNado = CNado-1
                                 if(CNado > 0):
                                     
-                                    Automatico_quieta = Automatico_quieta + 0.25
-                                    totContQuieta = totContQuieta + 0.25
+                                    Automatico_quieta = Automatico_quieta + 0.2
+                                    totContQuieta = totContQuieta + 0.2
                                 elif(CNado == 0):
                                     
-                                    CNado = 4
-                                    CQuieta = 4
+                                    CNado = 2
+                                    CQuieta = 2
                                     Vector_Quieta_Automatico.append(totContQuieta)
                                     totContQuieta = 0
                                     quietaBool = False
@@ -327,19 +330,19 @@ def exec(canvas1, video ):
                         else:
                             if(quietaBool):
                                
-                                Automatico_quieta = Automatico_quieta + 0.25
-                                totContQuieta = totContQuieta + 0.25
+                                Automatico_quieta = Automatico_quieta + 0.2
+                                totContQuieta = totContQuieta + 0.2
                                 Automatico_quietaS.set(str(Automatico_quieta))
                                 IndicadorTxt.config(text = "Quieta")
                                 Indicador.config(bg = "#6B74CA")
                             elif(nadandoBool):
                                     CQuieta = CQuieta - 1
                                     if(CQuieta>0):
-                                        Automatico_nado = Automatico_nado + 0.25
-                                        totContNado = totContNado + 0.25
+                                        Automatico_nado = Automatico_nado + 0.2
+                                        totContNado = totContNado + 0.2
                                     elif(CQuieta==0):
-                                        CNado = 4
-                                        CQuieta = 4
+                                        CNado = 2
+                                        CQuieta = 2
                                         Vector_Nado_Automatico.append(totContNado)
                                         totContNado = 0
                                         nadandoBool = False
@@ -581,38 +584,197 @@ def exportar_Manual():
     df.to_excel(url, sheet_name='example')
 
 def selectVideo_Manual(canvas4):
+    global Manual_video_name
     raiz.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("mp4","*.mp4"),("MTS","*.MTS"),("all files","*.*")))
+    print(raiz.filename)
     url = raiz.filename
-    video_name = url 
-    video = imageio.get_reader(video_name)
-    thread = threading.Thread(target=stream, args=(video,canvas4))
+    Manual_video_name = url 
+    stream(canvas4)
+
+def seleccionar_Manual():
+    global waitKey_fps, seleccion_Manual
+    waitKey_fps = 0
+    seleccion_Manual = True
+
+def stream(canvas4):
+    global Manual_video_name
+    thread = threading.Thread(name= "hilo_testManual" ,target=exec_manual, args=(Manual_video_name,canvas4))  
     thread.daemon = 1
     thread.start()
 
-def stream(video,canvas4):
-    global stopManual
-    for image in video.iter_data():
+def exec_manual(video,canvas1):
+    global mod_manual, Manual_nado, Manual_quieta, Vector_Nado_Manual, Vector_Quieta_Manual, stopManual,seleccion_Manual,waitKey_fps
+
+    #### Inicio Variables Locales ####
+    #Inicio del programa
+    seleccion = False 
+    seleccionado = False
+    #Primer frame del video
+    hsv = None 
+    #Posicion del elemento que queremos seguir
+    roiPos = [] 
+
+    #Variables para el marcado de movimiento
+    font = cv2.FONT_HERSHEY_SIMPLEX
+
+    #Variables para el calculo de velocidad
+    posAnterior = [0,0]
+    diferencia = [0,0]
+    velocidad = [0,0]
+    contadorFPS = 0
+    velTotal = 0
+    cntX = 0
+    cntY = 0
+    M = [0,0]
+
+    #variables para Camshift
+    track_window = []
+    term_crit =(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10,1)
+
+    #Variables resolucion de pantalla
+    pantalla = ctypes.windll.user32
+    pantalla.SetProcessDPIAware()
+    ancho, alto = pantalla.GetSystemMetrics(0), pantalla.GetSystemMetrics(1)
+    ####Fin Variables Locales ####
+
+    cap = cv2.VideoCapture(video)
+    m = cap.get(cv2.CAP_PROP_FPS)
+    
+    print("fps: "+str(m))
+    while(cap.isOpened()):
         MutexManual.acquire()
-        if(stopManual):
+        
+        cv2.waitKey(waitKey_fps) & 0xFF
+        posVideo = cap.get(cv2.CAP_PROP_POS_MSEC)
+        print("fps: "+str(round(posVideo/1000,2)))
+        if stopManual == True:
             MutexManual.release()
-            frame_image = ImageTk.PhotoImage((Image.fromarray(image)).resize((496,276), Image.ANTIALIAS))
-            canvas4.config(image=frame_image)
-            canvas4.config(width="492",height="272")
-            canvas4.place(x=80, y=150)
-            canvas4.image = frame_image
-            k = cv2.waitKey(5) & 0xFF
-        else:
-            MutexManual.release()
-            break
+            #Obtenemos cada frame del video
+            ret, frame_video = cap.read()
+            if ret == True:
+            
+                frame_video = cv2.resize(frame_video,(int(ancho/2),int(alto/2)))
+            
+                #Pasamos de BGR a HSV
+                hsv = cv2.cvtColor(frame_video,cv2.COLOR_BGR2HSV)
+
+                #Comprobamos si estamos en el momento de seleccion
+                if(seleccion_Manual):
+                    #cv2.imshow("image",frame)
+                    frame_image = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(frame_video,cv2.COLOR_BGR2RGB), "RGB").resize((600,300), Image.ANTIALIAS))
+                    canvas1.config(image=frame_image)
+                    canvas1.config(width="737",height="300")
+                    canvas1.place(x=126, y=180)
+                    canvas1.image =frame_image
+                    roiPos = cv2.selectROI(frame_video,True)
+                    track_window.append(roiPos[0])
+                    track_window.append(roiPos[1])
+                    track_window.append(roiPos[2])
+                    track_window.append(roiPos[3])
+
+                    roi = frame_video[roiPos[1]:roiPos[1]+roiPos[3], roiPos[0]:roiPos[0]+roiPos[2]]
+                    hsv_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+                    mask2 = cv2.inRange(hsv_roi,np.array((0., 60., 32.,)), np.array((180.,255.,255.)))
+                    roi_hist = cv2.calcHist([hsv_roi],[0],mask2,[180],[0,180])
+                    cv2.normalize(roi_hist,roi_hist,0,255,cv2.NORM_MINMAX)
+
+                    M[0] = track_window[0] + float(track_window[2])/2.
+                    M[1] = track_window[1] + float(track_window[3])/2.
+
+                    posAnterior[0] = int(M[0])
+                    posAnterior[1] = int(M[1])
+                    #btnSeleccionar.place_forget()
+                    waitKey_fps = 15
+                    seleccionado = True
+                    seleccion_Manual = False
+
+                if seleccionado == True :
+                    dst = cv2.calcBackProject([hsv],[0],roi_hist,[0,180],1)
+                    ret,track_window = cv2.CamShift(dst, (track_window[0],track_window[1],track_window[2],track_window[3]), term_crit)
+                    res = cv2.bitwise_and(frame_video,frame_video)
+
+                    #Mostrar por pantalla CamShift
+                    pts = cv2.boxPoints(ret)
+                    pts = np.int0(pts)
+                    img2 = cv2.polylines(res,[pts],True,255,2)
+
+                    #Almacenamos la posicion del cuadrado
+                    M[0] = track_window[0] + float(track_window[2])/2.
+                    M[1] = track_window[1] + float(track_window[3])/2.
+                    cntX = int(M[0])
+                    cntY = int(M[1])
+
+                    #Dibujamos por pantalla
+                    cv2.circle(res,(cntX,cntY),5,(130,50,200),-1)
+                    #cv2.putText(res,str(cntX)+','+str(cntY),(30, 60), font, 2, (130,50,200),3,cv2.LINE_AA)
+
+                    #Calculamos la velocidad
+                    if(contadorFPS == 5):
+                        
+                        #Obtenemos la posicion de hace 6 frames
+                        x0 = posAnterior[len(posAnterior)-2]
+                        y0 = posAnterior[len(posAnterior)-1]
+                        #Obtenemos la posicion del frame actual
+                        x1 = cntX
+                        y1 = cntY
+                        #Obtenemos la diferencia entre el frame1 y el frame0
+                        diferencia.append(abs(x0-x1))
+                        diferencia.append(abs(y0-y1))
+                        #Obtenemos la velocidad tomando como tiempo un cuarto de un segundo (cada 6 frames)
+                        velocidad.append(diferencia[(len(diferencia)-2)]/0.5)
+                        velocidad.append(diferencia[(len(diferencia)-1)]/0.5)
+                        #Obtenemos la velocidad total
+                        vX = velocidad[len(velocidad)-2]
+                        vY = velocidad[len(velocidad)-1]
+                        velTotal = np.array([vX,vY])
+                        velTotal = np.linalg.norm(velTotal)
+                        mod_manual.append(velTotal)
+
+                        #Actualizamos la posicion anterior y aumentamos el contador
+                        posAnterior.append(cntX)
+                        posAnterior.append(cntY)
+                        #Pintamos la grafica (ELIMINAR)
+                            #cv2.line(graf,(contadorGrafica,(206-int(mod[len(mod)-2]))),((contadorGrafica+3),(206-int(mod[len(mod)-1]))),(0,0,0),1)
+                            #contadorGrafica = contadorGrafica+3
+                            #cv2.imshow("grafica",graf)
+                        #Limpar contador
+                        contadorFPS = 0
+
+                    contadorFPS = contadorFPS + 1
+                    #cv2.putText(res, str(mod[len(mod)-1]),(30,120),font,2, (130,50,200),3,cv2.LINE_AA)
+            
+                    frame_image2 = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(res,cv2.COLOR_BGR2RGB),"RGB").resize((600,300), Image.ANTIALIAS))
+                    canvas1.config(image=frame_image2)
+                    canvas1.config(width="737",height="300")
+                    canvas1.place(x=126, y=180)
+                    canvas1.image = frame_image2
+                else:
+                    ph = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(frame_video,cv2.COLOR_BGR2RGB),"RGB").resize((600,300), Image.ANTIALIAS))
+                    canvas1.config(image=ph)
+                    canvas1.config(width="737",height="300")
+                    canvas1.place(x=126, y=180)
+                    canvas1.image = ph
+                
+            else:
+                MutexManual.release()
+                cap.release()
+                cv2.destroyAllWindows()
+                
+
+    cap.release()
+    cv2.destroyAllWindows()
 
 def to_Init_Manual():
-    global Manual_nado, Manual_quieta, Manual_cInit, Manual_cFin, Manual_inicializado, Manual_nadando, Manual_quietaB, stopManual, Porcentaje_Manual_Nado, Porcentaje_Manual_Quieta, Vector_Nado_Manual, Vector_Quieta_Manual
+    global Manual_video_name, seleccion_Manual,mod_manual, Manual_nado, Manual_quieta, Manual_cInit, Manual_cFin, Manual_inicializado, Manual_nadando, Manual_quietaB, stopManual, Porcentaje_Manual_Nado, Porcentaje_Manual_Quieta, Vector_Nado_Manual, Vector_Quieta_Manual
     
     #limpar variables#
+    Manual_video_name = ""
+    seleccion_Manual = False
     Manual_nado = 0
     Manual_quieta = 0
     Manual_cInit = 0
     Manual_cFin = 0
+    mod_manual = [0]
     Manual_inicializado = False
     Manual_nadando = False
     Manual_quietaB = False
