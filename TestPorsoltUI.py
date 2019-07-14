@@ -329,7 +329,7 @@ def exec(canvas1, video ):
                                
                                 Automatico_nado = round(Automatico_nado + 0.2 ,2)
                                 totContNado = round(totContNado + 0.2,2)
-                                Automatico_nadoS.set(str(Automatico_nado))
+                                Automatico_nadoS.set(str(Automatico_nado)+" s")
                                 IndicadorTxt.config (text = "Nadando")
                                 Indicador.config(bg = "#3847CD")
                             elif(quietaBool):
@@ -353,7 +353,7 @@ def exec(canvas1, video ):
                                
                                 Automatico_quieta = round(Automatico_quieta + 0.2,2)
                                 totContQuieta = round(totContQuieta + 0.2,2)
-                                Automatico_quietaS.set(str(Automatico_quieta))
+                                Automatico_quietaS.set(str(Automatico_quieta)+ " s")
                                 IndicadorTxt.config(text = "Quieta")
                                 Indicador.config(bg = "#6B74CA")
                             elif(nadandoBool):
@@ -413,8 +413,8 @@ def parar_Automatico():
     AutomaticoTotal = Automatico_nado + Automatico_quieta
     Porcentaje_Automatico_Nado = Automatico_nado / AutomaticoTotal * 100
     Porcentaje_Automatico_Quieta = Automatico_quieta / AutomaticoTotal * 100
-    Automatico_Porcentaje_NadoS.set(str(round(Porcentaje_Automatico_Nado)))
-    Automatico_Porcentaje_QuietaS.set(str(round(Porcentaje_Automatico_Quieta)))
+    Automatico_Porcentaje_NadoS.set(str(round(Porcentaje_Automatico_Nado))+" %")
+    Automatico_Porcentaje_QuietaS.set(str(round(Porcentaje_Automatico_Quieta))+" %")
     
 
     MutexAutomatico.acquire()
@@ -493,10 +493,10 @@ def to_Init_Automatico():
     boolAutomatico = False
     seleccion = False
 
-    Automatico_nadoS.set(str(Automatico_nado))
-    Automatico_quietaS.set(str(Automatico_quieta))
-    Automatico_Porcentaje_NadoS.set(str(Porcentaje_Automatico_Nado))
-    Automatico_Porcentaje_QuietaS.set(str(Porcentaje_Automatico_Quieta))
+    Automatico_nadoS.set(str(Automatico_nado) +" s")
+    Automatico_quietaS.set(str(Automatico_quieta)+" s")
+    Automatico_Porcentaje_NadoS.set(str(Porcentaje_Automatico_Nado)+" %")
+    Automatico_Porcentaje_QuietaS.set(str(Porcentaje_Automatico_Quieta)+" %")
 
     frame5.pack_forget()
     frame1.pack()
@@ -528,7 +528,7 @@ def contador():
         Vector_Nado_Manual.append(round(Manual_cFin,2))
         Manual_cInit = time()
        
-        Manual_nadoS.set(str(round(Manual_nado,2)))
+        Manual_nadoS.set(str(round(Manual_nado,2))+" s")
         
 
     elif(Manual_quietaB == True):
@@ -539,7 +539,7 @@ def contador():
         Manual_quieta = Manual_quieta + Manual_cFin
         Vector_Quieta_Manual.append(round(Manual_cFin,2))
         Manual_cInit = time()
-        Manual_quietaS.set(str(round(Manual_quieta,2)))
+        Manual_quietaS.set(str(round(Manual_quieta,2))+" s")
 
 def parar_Manual():
     global Manual_nado, Manual_quieta, Porcentaje_Manual_Nado, Porcentaje_Manual_Quieta,stopManual 
@@ -547,8 +547,8 @@ def parar_Manual():
     Manual_Total = Manual_nado + Manual_quieta
     Porcentaje_Manual_Nado = Manual_nado/Manual_Total*100
     Porcentaje_Manual_Quieta = Manual_quieta/Manual_Total*100
-    Manual_Porcentaje_NadoS.set(str(round(Porcentaje_Manual_Nado)))
-    Manual_Porcentaje_QuietaS.set(str(round(Porcentaje_Manual_Quieta)))
+    Manual_Porcentaje_NadoS.set(str(round(Porcentaje_Manual_Nado))+ " %")
+    Manual_Porcentaje_QuietaS.set(str(round(Porcentaje_Manual_Quieta))+" %")
     MutexManual.acquire()
     stopManual = False
     MutexManual.release()
@@ -811,10 +811,10 @@ def to_Init_Manual():
     Vector_Quieta_Manual.clear()
     boolManual = False
 
-    Manual_nadoS.set(str(Manual_nado))
-    Manual_quietaS.set(str(Manual_quieta))
-    Manual_Porcentaje_NadoS.set(str(Porcentaje_Manual_Nado))
-    Manual_Porcentaje_QuietaS.set(str(Porcentaje_Manual_Quieta))
+    Manual_nadoS.set(str(Manual_nado)+" s")
+    Manual_quietaS.set(str(Manual_quieta)+" s")
+    Manual_Porcentaje_NadoS.set(str(Porcentaje_Manual_Nado)+" %")
+    Manual_Porcentaje_QuietaS.set(str(Porcentaje_Manual_Quieta)+" %")
 
     frame8.pack_forget()
     frame1.pack()
