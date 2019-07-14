@@ -21,6 +21,7 @@ import ctypes
 import matplotlib.pyplot as plt
 import ctypes 
 import pandas as pd
+import xlsxwriter
 
 from matplotlib import animation
 from matplotlib import style
@@ -63,6 +64,7 @@ Manual_nadoS = StringVar()
 Manual_quietaS = StringVar()
 Manual_Porcentaje_NadoS = StringVar()
 Manual_Porcentaje_QuietaS = StringVar()
+tiempoS = StringVar()
 
 ### FIN VARIABLES TEST MANUAL ###
 
@@ -90,6 +92,7 @@ Automatico_nadoS = StringVar()
 Automatico_quietaS = StringVar()
 Automatico_Porcentaje_NadoS = StringVar()
 Automatico_Porcentaje_QuietaS = StringVar()
+tiempo_AutomaticoS = StringVar()
 ### FIN VARIABLES TEST AUTOMATICO ###
 def nothing(x):
 	pass
@@ -145,15 +148,17 @@ def seleccionar():
         frame7.pack()
 
 def reiniciar_Automatico():
-    global  mod, Automatico_nado, Automatico_quieta, Vector_Nado_Automatico, Vector_Quieta_Automatico
+    global  mod, Automatico_nado, Automatico_quieta, Vector_Nado_Automatico, Vector_Quieta_Automatico, Automatico_nadoS, Automatico_quietaS
     mod = [0]
     Automatico_nado = 0
     Automatico_quieta = 0
     Vector_Nado_Automatico = [0]
     Vector_Quieta_Automatico = [0]
+    Automatico_nadoS.set(str(Automatico_nado))
+    Automatico_quietaS.set(str(Automatico_quieta))
 
 def exec(canvas1, video ):
-    global mod, Automatico_nado, Automatico_quieta, Vector_Nado_Automatico, Vector_Quieta_Automatico, stopAutomatico,seleccion,waitKey_fps
+    global mod, Automatico_nado, Automatico_quieta, Vector_Nado_Automatico, Vector_Quieta_Automatico, stopAutomatico,seleccion,waitKey_fps,tiempo_AutomaticoS
 
     ### REAJUSTE DEL FRAME4 ###
     frame4.config(width = "2100", height="1300", bg="#242424")
@@ -163,6 +168,9 @@ def exec(canvas1, video ):
     canvas = Label(frame4)
     canvas.config(width="70",height="15", bg="#242424")
     canvas.place(x=300, y=180)
+
+    tiempoF4 = Label(frame4,bg="#242424", foreground="white",font=("Helvetica", 15),textvariable=tiempo_AutomaticoS)
+    tiempoF4.place(x=1000, y=410)
 
     IndicadorTxt = Label(frame4, text="Nadando", bg="#242424", foreground="white",font=("Helvetica", 12))
     IndicadorTxt.place(x=580,y=450)
@@ -241,6 +249,8 @@ def exec(canvas1, video ):
         MutexAutomatico.acquire()
         
         cv2.waitKey(waitKey_fps) & 0xFF
+        posVideo = cap.get(cv2.CAP_PROP_POS_MSEC)
+        tiempo_AutomaticoS.set(str(round(posVideo/1000))+" s")
 
         if stopAutomatico == True:
             MutexAutomatico.release()
@@ -411,11 +421,19 @@ def parar_Automatico():
     global Automatico_nado, Automatico_quieta, Porcentaje_Automatico_Nado, Porcentaje_Automatico_Quieta,stopAutomatico
 
     AutomaticoTotal = Automatico_nado + Automatico_quieta
-    Porcentaje_Automatico_Nado = Automatico_nado / AutomaticoTotal * 100
-    Porcentaje_Automatico_Quieta = Automatico_quieta / AutomaticoTotal * 100
+    if Automatico_nado != 0:
+        Porcentaje_Automatico_Nado = Automatico_nado / AutomaticoTotal * 100
+    else:
+        Porcentaje_Automatico_Nado = 0
+
+    if Automatico_quieta != 0:
+        Porcentaje_Automatico_Quieta = Automatico_quieta / AutomaticoTotal * 100
+    else:
+        Porcentaje_Automatico_Quieta = 0
+
+
     Automatico_Porcentaje_NadoS.set(str(round(Porcentaje_Automatico_Nado))+" %")
     Automatico_Porcentaje_QuietaS.set(str(round(Porcentaje_Automatico_Quieta))+" %")
-    
 
     MutexAutomatico.acquire()
     stopAutomatico = False
@@ -459,7 +477,9 @@ def parar_Automatico():
     ### Fin Reajuste frame 5 ###
 
 def exportar_Automatico():
-    global Automatico_nado, Automatico_quieta, Porcentaje_Automatico_Nado, Porcentaje_Automatico_Quieta,Vector_Nado_Automatico, Vector_Quieta_Automatico
+    global Automatico_nado, Automatico_quieta, Porcentaje_Automatico_Nado, Porcentaje_Automatico_Quieta,Vector_Nado_Automatico, Vector_Quieta_Automatico,mod
+    fila = 0
+
     raiz.filename = filedialog.asksaveasfilename(initialdir = "/", title = "Select directory",filetypes = (("xlsx","*.xlsx"),("all files","*.*")))
     url = raiz.filename+".xlsx"
 
@@ -470,14 +490,39 @@ def exportar_Automatico():
         while(len(Vector_Nado_Automatico)<len(Vector_Quieta_Automatico)):
             Vector_Nado_Automatico.append(0)
 
-    data = {'Tiempo total nado': round(Automatico_nado,2),
-            'Tiempo total reposo': round(Automatico_quieta,2),
-            'Porcentaje nado': round(Porcentaje_Automatico_Nado),
-            'Porcentaje reposo': round(Porcentaje_Automatico_Quieta),
-            'Tiempos nado': Vector_Nado_Automatico,
-            'Tiempos reposo': Vector_Quieta_Automatico}
-    df = pd.DataFrame(data,columns = ['Tiempo total nado', 'Tiempo total reposo','Porcentaje nado','Porcentaje reposo','Tiempos nado','Tiempos reposo' ])
-    df.to_excel(url, sheet_name='example')
+    workbook = xlsxwriter.Workbook(url)
+    worksheet = workbook.add_worksheet()
+
+    worksheet.write(fila,0, 'Tiempo Total Nado (segundos)')
+    worksheet.write(fila,1, round(Automatico_nado,2))
+    fila = fila+1
+    worksheet.write(fila,0, 'Tiempo Total Reposo (segundos)')
+    worksheet.write(fila,1, round(Automatico_quieta,2))
+    fila = fila+1
+    worksheet.write(fila,0, 'Porcentaje Nado (%)')
+    worksheet.write(fila,1, round(Porcentaje_Automatico_Nado))
+    fila = fila+1
+    worksheet.write(fila,0, 'Porcentaje Reposo (%)')
+    worksheet.write(fila,1, round(Porcentaje_Automatico_Quieta))
+    fila = fila+1
+    fila = fila+1
+
+    worksheet.write(fila,0, 'Tiempos Nado (segundos)')
+    worksheet.write(fila,1, 'Tiempos Reposo (segundos)')
+    fila = fila+1
+    for x in range (0,len(Vector_Nado_Automatico)):
+        worksheet.write(fila,0, Vector_Nado_Automatico[x])
+        worksheet.write(fila,1, Vector_Quieta_Automatico[x])
+        fila = fila+1
+    
+    fila = fila+1
+    worksheet.write(fila,0, 'Velocidades (pixels/s)')
+    fila = fila+1
+    for y in range (0,len(mod)):
+        worksheet.write(fila,0, mod[y])
+        fila = fila+1
+
+    workbook.close()
 
 def to_Init_Automatico():
     global Automatico_video_name, stopAutomatico, mod, Automatico_nado, Automatico_quieta, Porcentaje_Automatico_Nado, Porcentaje_Automatico_Quieta, Vector_Nado_Automatico, Vector_Quieta_Automatico, boolAutomatico,seleccion
@@ -545,17 +590,29 @@ def parar_Manual():
     global Manual_nado, Manual_quieta, Porcentaje_Manual_Nado, Porcentaje_Manual_Quieta,stopManual 
     frame7.pack_forget()
     Manual_Total = Manual_nado + Manual_quieta
-    Porcentaje_Manual_Nado = Manual_nado/Manual_Total*100
-    Porcentaje_Manual_Quieta = Manual_quieta/Manual_Total*100
+
+    if Manual_nadando != 0:
+        Porcentaje_Manual_Nado = Manual_nado/Manual_Total*100
+    else:
+        Porcentaje_Manual_Nado = 0
+    
+    if Manual_quieta != 0:
+        Porcentaje_Manual_Quieta = Manual_quieta/Manual_Total*100
+    else:
+        Porcentaje_Manual_Quieta = 0
+    
     Manual_Porcentaje_NadoS.set(str(round(Porcentaje_Manual_Nado))+ " %")
     Manual_Porcentaje_QuietaS.set(str(round(Porcentaje_Manual_Quieta))+" %")
+
     MutexManual.acquire()
     stopManual = False
     MutexManual.release()
+
     frame8.pack()
     
 def exportar_Manual():
-    global Manual_nado, Manual_quieta, Porcentaje_Manual_Nado, Porcentaje_Manual_Quieta,Vector_Nado_Manual, Vector_Quieta_Manual
+    global Manual_nado, Manual_quieta, Porcentaje_Manual_Nado, Porcentaje_Manual_Quieta,Vector_Nado_Manual, Vector_Quieta_Manual,mod_manual
+    fila = 0
 
     raiz.filename = filedialog.asksaveasfilename(initialdir = "/", title = "Select directory",filetypes = (("xlsx","*.xlsx"),("all files","*.*")))
     url = raiz.filename+".xlsx"
@@ -567,14 +624,39 @@ def exportar_Manual():
         while(len(Vector_Nado_Manual)<len(Vector_Quieta_Manual)):
             Vector_Nado_Manual.append(0)
 
-    data = {'Tiempo total nado': round(Manual_nado,2),
-            'Tiempo total reposo': round(Manual_quieta,2),
-            'Porcentaje nado': round(Porcentaje_Manual_Nado),
-            'Porcentaje reposo': round(Porcentaje_Manual_Quieta),
-            'Tiempos nado': Vector_Nado_Manual,
-            'Tiempos reposo': Vector_Quieta_Manual}
-    df = pd.DataFrame(data,columns = ['Tiempo total nado', 'Tiempo total reposo','Porcentaje nado','Porcentaje reposo','Tiempos nado','Tiempos reposo' ])
-    df.to_excel(url, sheet_name='example')
+    workbook = xlsxwriter.Workbook(url)
+    worksheet = workbook.add_worksheet()
+
+    worksheet.write(fila,0, 'Tiempo Total Nado (segundos)')
+    worksheet.write(fila,1, round(Manual_nado,2))
+    fila = fila+1
+    worksheet.write(fila,0, 'Tiempo Total Reposo (segundos)')
+    worksheet.write(fila,1, round(Manual_quieta,2))
+    fila = fila+1
+    worksheet.write(fila,0, 'Porcentaje Nado (%)')
+    worksheet.write(fila,1, round(Porcentaje_Manual_Nado))
+    fila = fila+1
+    worksheet.write(fila,0, 'Porcentaje Reposo (%)')
+    worksheet.write(fila,1, round(Porcentaje_Manual_Quieta))
+    fila = fila+1
+    fila = fila+1
+
+    worksheet.write(fila,0, 'Tiempos Nado (segundos)')
+    worksheet.write(fila,1, 'Tiempos Reposo (segundos)')
+    fila = fila+1
+    for x in range (0,len(Vector_Nado_Manual)):
+        worksheet.write(fila,0, Vector_Nado_Manual[x])
+        worksheet.write(fila,1, Vector_Quieta_Manual[x])
+        fila = fila+1
+    
+    fila = fila+1
+    worksheet.write(fila,0, 'Velocidades (pixels/s)')
+    fila = fila+1
+    for y in range (0,len(mod_manual)):
+        worksheet.write(fila,0, mod_manual[y])
+        fila = fila+1
+
+    workbook.close()
 
 def selectVideo_Manual():
     global Manual_video_name
@@ -586,12 +668,14 @@ def selectVideo_Manual():
 
 
 def reiniciar_Manual():
-    global  mod_manual, Manual_nado, Manual_quieta, Vector_Nado_Manual, Vector_Quieta_Manual
+    global  mod_manual, Manual_nado, Manual_quieta, Vector_Nado_Manual, Vector_Quieta_Manual,Manual_quietaS, Manual_nadoS
     mod_manual = [0]
     Manual_nado = 0
     Manual_quieta = 0
     Vector_Nado_Manual = [0]
     Vector_Quieta_Manual = [0]
+    Manual_quietaS.set(str(Manual_quieta))
+    Manual_nadoS.set(str(Manual_nado))
 
 def stream(canvas):
     global Manual_video_name
@@ -600,7 +684,7 @@ def stream(canvas):
     thread.start()
 
 def exec_manual(video,canvas1):
-    global mod_manual, Manual_nado, Manual_quieta, Vector_Nado_Manual, Vector_Quieta_Manual, stopManual,seleccion,waitKey_fps
+    global mod_manual, Manual_nado, Manual_quieta, Vector_Nado_Manual, Vector_Quieta_Manual, stopManual,seleccion,waitKey_fps,tiempoS
 
 
     ### FRAME 7 ###
@@ -609,9 +693,13 @@ def exec_manual(video,canvas1):
     TituloAutomatico = Label(frame7,text="Test Manual de Porsolt",bg="#242424",foreground="white",font=("Helvetica", 20))
     TituloAutomatico.place(x=530, y=55)
 
+
     canvas4 = Label(frame7)
     canvas4.config(width="70",height="15",bg="#242424")
     canvas4.place(x=80, y=150)
+
+    tiempo = Label(frame7,bg="#242424", foreground="white",font=("Helvetica", 15),textvariable=tiempoS)
+    tiempo.place(x=1000, y=410)
 
     contNado = Label(frame7, text = "Tiempo Nado: ",bg="#242424", foreground="white",font=("Helvetica", 15))
     contNado.place(x=580, y=450)
@@ -626,7 +714,7 @@ def exec_manual(video,canvas1):
     btnParar.config(width="10", height="2",font=("Helvetica", 14), bg="#3F3F3F", foreground="white", command = parar_Manual)
     btnParar.place(x=1000, y=550)
 
-    btnReiniciarF7 = Button(frame7, text="Parar")
+    btnReiniciarF7 = Button(frame7, text="Reiniciar")
     btnReiniciarF7.config(width="10", height="2",font=("Helvetica", 14), bg="#3F3F3F", foreground="white", command = reiniciar_Manual)
     btnReiniciarF7.place(x=220, y=550)
     ### FIN FRAME 7 ###
@@ -665,14 +753,14 @@ def exec_manual(video,canvas1):
 
     cap = cv2.VideoCapture(video)
     m = cap.get(cv2.CAP_PROP_FPS)
-    
     print("fps: "+str(m))
     while(cap.isOpened()):
         MutexManual.acquire()
         
         cv2.waitKey(waitKey_fps) & 0xFF
         posVideo = cap.get(cv2.CAP_PROP_POS_MSEC)
-        print("fps: "+str(round(posVideo/1000,2)))
+        tiempoS.set(str(round(posVideo/1000))+" s")
+ 
         if stopManual == True:
             MutexManual.release()
             #Obtenemos cada frame del video
