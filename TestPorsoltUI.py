@@ -40,21 +40,25 @@ boolManual = False
 ### VARIABLES PARA TEST MANUAL ###
 Manual_nado = 0
 Manual_quieta = 0
-Manual_cInit = 0
-Manual_cFin = 0
+Manual_escalada = 0
 Manual_inicializado = False
 Manual_nadando = False
 Manual_quietaB = False
+Manual_escaladaB  = False
 stopManual = True
 MutexManual = Lock()
 Manual_video_name = ""
 mod_manual = [0]
 seleccion_Manual = False
+Manual_cInit = 0
+Manual_cFin = 0
 ### VARIABLES EXCEL ###
 Porcentaje_Manual_Nado = 0
 Porcentaje_Manual_Quieta = 0
+Porcentaje_Manual_Escalado = 0
 Vector_Nado_Manual = [0]
 Vector_Quieta_Manual = [0]
+Vector_Escalada_Manual = [0]
 
 raiz = Tk()
 
@@ -62,8 +66,10 @@ raiz = Tk()
 ### STRINGS MANUAL ###
 Manual_nadoS = StringVar()
 Manual_quietaS = StringVar()
+Manual_escaladaS = StringVar()
 Manual_Porcentaje_NadoS = StringVar()
 Manual_Porcentaje_QuietaS = StringVar()
+Manual_Porcentaje_escaladaS = StringVar()
 tiempoS = StringVar()
 
 ### FIN VARIABLES TEST MANUAL ###
@@ -123,7 +129,7 @@ def back():
 
 def selectVideo_Automatico():
     global Automatico_video_name
-    raiz.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("mp4","*.mp4"),("MTS","*.MTS"),("all files","*.*")))
+    raiz.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("MTS","*.MTS"),("mp4","*.mp4"),("all files","*.*")))
     print(raiz.filename)
     url = raiz.filename
     Automatico_video_name = url 
@@ -233,25 +239,31 @@ def exec(canvas1, video ):
     #Variables contador de nado
     nadandoBool = True
     quietaBool = False
-    CNado = 4
-    CQuieta = 4
+    CNado = 2
+    CQuieta = 2
     totContNado = 0
     totContQuieta = 0
 
     #VariablesGrafica
     contadorGrafica = 50
+
+    minutos = 0
+    segundos = 0
     ####Fin Variables Locales ####
 
     cap = cv2.VideoCapture(video)
     m = cap.get(cv2.CAP_PROP_FPS)
     print("fps: "+str(m))
     while(cap.isOpened()):
-        MutexAutomatico.acquire()
         
         cv2.waitKey(waitKey_fps) & 0xFF
         posVideo = cap.get(cv2.CAP_PROP_POS_MSEC)
-        tiempo_AutomaticoS.set(str(round(posVideo/1000))+" s")
+        posVideo = posVideo/1000
+        minutos = posVideo/60
+        segundos = posVideo % 60
+        tiempo_AutomaticoS.set(str(int(minutos))+":"+str(int(segundos)))
 
+        MutexAutomatico.acquire()
         if stopAutomatico == True:
             MutexAutomatico.release()
             #Obtenemos cada frame del video
@@ -334,7 +346,7 @@ def exec(canvas1, video ):
                         velTotal = np.linalg.norm(velTotal)
                         mod.append(velTotal)
                         #Comprobamos la velocidad y contamos el tiempo
-                        if (velTotal>17):
+                        if (velTotal>8):
                             if(nadandoBool):
                                
                                 Automatico_nado = round(Automatico_nado + 0.2 ,2)
@@ -342,6 +354,7 @@ def exec(canvas1, video ):
                                 Automatico_nadoS.set(str(Automatico_nado)+" s")
                                 IndicadorTxt.config (text = "Nadando")
                                 Indicador.config(bg = "#3847CD")
+                                CQuieta = 2
                             elif(quietaBool):
                                
                                 CNado = CNado-1
@@ -351,8 +364,8 @@ def exec(canvas1, video ):
                                     totContQuieta = round(totContQuieta + 0.2,2)
                                 elif(CNado == 0):
                                     
-                                    CNado = 4
-                                    CQuieta = 4
+                                    CNado = 2
+                                    CQuieta = 2
                                     Vector_Quieta_Automatico.append(totContQuieta)
                                     totContQuieta = 0
                                     quietaBool = False
@@ -366,14 +379,15 @@ def exec(canvas1, video ):
                                 Automatico_quietaS.set(str(Automatico_quieta)+ " s")
                                 IndicadorTxt.config(text = "Quieta")
                                 Indicador.config(bg = "#6B74CA")
+                                CNado = 2
                             elif(nadandoBool):
                                     CQuieta = CQuieta - 1
                                     if(CQuieta>0):
                                         Automatico_nado = round(Automatico_nado + 0.2,2)
                                         totContNado = round(totContNado + 0.2,2)
                                     elif(CQuieta==0):
-                                        CNado = 4
-                                        CQuieta = 4
+                                        CNado = 2
+                                        CQuieta = 2
                                         Vector_Nado_Automatico.append(totContNado)
                                         totContNado = 0
                                         nadandoBool = False
@@ -409,8 +423,12 @@ def exec(canvas1, video ):
                 cap.release()
                 cv2.destroyAllWindows()
                 canvas1.place_forget()
-                canvas.place_forget()
-                
+                canvas.place_forget()  
+        else:
+            MutexAutomatico.release()
+            cap.release()
+            cv2.destroyAllWindows()
+
     canvas.place_forget()
     canvas1.place_forget()
     cap.release()
@@ -519,15 +537,17 @@ def exportar_Automatico():
     worksheet.write(fila,0, 'Velocidades (pixels/s)')
     fila = fila+1
     for y in range (0,len(mod)):
-        worksheet.write(fila,0, mod[y])
+        worksheet.write(fila,0, round(mod[y]))
         fila = fila+1
 
     workbook.close()
 
 def to_Init_Automatico():
-    global Automatico_video_name, stopAutomatico, mod, Automatico_nado, Automatico_quieta, Porcentaje_Automatico_Nado, Porcentaje_Automatico_Quieta, Vector_Nado_Automatico, Vector_Quieta_Automatico, boolAutomatico,seleccion
+    global Automatico_video_name, stopAutomatico, mod, Automatico_nado, Automatico_quieta, Porcentaje_Automatico_Nado, Porcentaje_Automatico_Quieta, Vector_Nado_Automatico, Vector_Quieta_Automatico, boolAutomatico,seleccion,MutexAutomatico
     Automatico_video_name = ""
+    MutexAutomatico.acquire()
     stopAutomatico = True
+    MutexAutomatico.release()
     mod = [0]
     Automatico_nado = 0
     Automatico_quieta = 0
@@ -554,55 +574,106 @@ def manual():
     frame2.pack()
 
 
-def contador():
-    global Manual_inicializado, Manual_nadando, Manual_quietaB, Manual_nado, Manual_quieta, Manual_cInit, Manual_cFin, Vector_Nado_Manual, Vector_Quieta_Manual
-
-    if(Manual_inicializado == False):
-        btnIniciar['text'] = 'Quieta'
-        Manual_inicializado = True
-        Manual_nadando = True
-        Manual_cInit = time()
-        
-        
-    elif(Manual_nadando == True):
-        btnIniciar['text'] = 'Nadando'
+def contador_reposo():
+    global Manual_nadando, Manual_quietaB, Manual_escaladaB, Manual_cInit, Manual_cFin,Manual_nado, Manual_quieta, Manual_escalada,Vector_Escalada_Manual,Vector_Nado_Manual,Manual_escaladaS,Manual_nadoS,Manual_quietaS
+    if(Manual_nadando == True):
         Manual_nadando = False
         Manual_quietaB = True
         Manual_cFin = time() - Manual_cInit
         Manual_nado = Manual_nado + Manual_cFin
         Vector_Nado_Manual.append(round(Manual_cFin,2))
         Manual_cInit = time()
-       
-        Manual_nadoS.set(str(round(Manual_nado,2))+" s")
-        
 
-    elif(Manual_quietaB == True):
-        btnIniciar['text'] = 'Quieta'
-        Manual_nadando = True
+        Manual_nadoS.set(str(round(Manual_nado,2))+" s")
+
+    if(Manual_escaladaB == True):
+        Manual_escaladaB = False
+        Manual_quietaB = True
+        Manual_cFin = time() - Manual_cInit
+        Manual_escalada = Manual_escalada + Manual_cFin
+        Vector_Escalada_Manual.append(round(Manual_cFin,2))
+        Manual_cInit = time()
+
+        Manual_escaladaS.set(str(round(Manual_escalada,2))+" s")
+    
+    if((Manual_nadando == False) and (Manual_escaladaB == False) and (Manual_quietaB == False)):
+        Manual_quietaB = True
+        Manual_cInit = time()
+
+def contador_escalada():
+    global Manual_nadando, Manual_quietaB, Manual_escaladaB, Manual_cInit, Manual_cFin,Manual_nado, Manual_quieta, Manual_escalada,Vector_Escalada_Manual,Vector_Nado_Manual,Manual_escaladaS,Manual_nadoS,Manual_quietaS
+    if(Manual_nadando == True):
+        Manual_nadando = False
+        Manual_escaladaB = True
+        Manual_cFin = time() - Manual_cInit
+        Manual_nado = Manual_nado + Manual_cFin
+        Vector_Nado_Manual.append(round(Manual_cFin,2))
+        Manual_cInit = time()
+
+        Manual_nadoS.set(str(round(Manual_nado,2))+" s")
+
+    if(Manual_quietaB == True):
         Manual_quietaB = False
+        Manual_escaladaB = True
         Manual_cFin = time() - Manual_cInit
         Manual_quieta = Manual_quieta + Manual_cFin
         Vector_Quieta_Manual.append(round(Manual_cFin,2))
         Manual_cInit = time()
+
         Manual_quietaS.set(str(round(Manual_quieta,2))+" s")
+    
+    if((Manual_nadando == False) and (Manual_escaladaB == False) and (Manual_quietaB == False)):
+        Manual_escaladaB = True
+        Manual_cInit = time()
+    
+
+def contador_nado():
+    global Manual_nadando, Manual_quietaB, Manual_escaladaB, Manual_cInit, Manual_cFin,Manual_nado, Manual_quieta, Manual_escalada,Vector_Escalada_Manual,Vector_Nado_Manual,Manual_escaladaS,Manual_nadoS,Manual_quietaS
+    if(Manual_escaladaB == True):
+        Manual_escaladaB = False
+        Manual_nadando = True
+        Manual_cFin = time() - Manual_cInit
+        Manual_escalada = Manual_escalada + Manual_cFin
+        Vector_Escalada_Manual.append(round(Manual_cFin,2))
+        Manual_cInit = time()
+
+        Manual_escaladaS.set(str(round(Manual_escalada,2))+" s")
+
+    if(Manual_quietaB == True):
+        Manual_quietaB = False
+        Manual_nadando = True
+        Manual_cFin = time() - Manual_cInit
+        Manual_quieta = Manual_quieta + Manual_cFin
+        Vector_Quieta_Manual.append(round(Manual_cFin,2))
+        Manual_cInit = time()
+
+        Manual_quietaS.set(str(round(Manual_quieta,2))+" s")
+    
+    if((Manual_nadando == False) and (Manual_escaladaB == False) and (Manual_quietaB == False)):
+        Manual_nado = True
+        Manual_cInit = time()
 
 def parar_Manual():
-    global Manual_nado, Manual_quieta, Porcentaje_Manual_Nado, Porcentaje_Manual_Quieta,stopManual 
+    global Manual_nado, Manual_quieta, Manual_escalada, Porcentaje_Manual_Nado, Porcentaje_Manual_Quieta,Porcentaje_Manual_Escalado ,stopManual 
     frame7.pack_forget()
-    Manual_Total = Manual_nado + Manual_quieta
+    Manual_Total = Manual_nado + Manual_quieta + Manual_escalada
 
-    if Manual_nadando != 0:
-        Porcentaje_Manual_Nado = Manual_nado/Manual_Total*100
-    else:
-        Porcentaje_Manual_Nado = 0
+    Porcentaje_Manual_Nado = Manual_nado/Manual_Total*100
     
     if Manual_quieta != 0:
         Porcentaje_Manual_Quieta = Manual_quieta/Manual_Total*100
     else:
         Porcentaje_Manual_Quieta = 0
     
+    if Manual_escalada != 0:
+        Porcentaje_Manual_Escalado = Manual_escalada/Manual_Total*100
+    else:
+        Porcentaje_Manual_Escalado = 0
+    
+    
     Manual_Porcentaje_NadoS.set(str(round(Porcentaje_Manual_Nado))+ " %")
     Manual_Porcentaje_QuietaS.set(str(round(Porcentaje_Manual_Quieta))+" %")
+    Manual_Porcentaje_escaladaS.set(str(round(Porcentaje_Manual_Escalado))+" %")
 
     MutexManual.acquire()
     stopManual = False
@@ -611,18 +682,35 @@ def parar_Manual():
     frame8.pack()
     
 def exportar_Manual():
-    global Manual_nado, Manual_quieta, Porcentaje_Manual_Nado, Porcentaje_Manual_Quieta,Vector_Nado_Manual, Vector_Quieta_Manual,mod_manual
+    global Manual_nado, Manual_quieta, Manual_escalada,Porcentaje_Manual_Nado, Porcentaje_Manual_Quieta, Porcentaje_Manual_Escalado, Vector_Nado_Manual, Vector_Quieta_Manual,Vector_Escalada_Manual ,mod_manual
     fila = 0
 
     raiz.filename = filedialog.asksaveasfilename(initialdir = "/", title = "Select directory",filetypes = (("xlsx","*.xlsx"),("all files","*.*")))
     url = raiz.filename+".xlsx"
 
-    if(len(Vector_Nado_Manual)>len(Vector_Quieta_Manual)):
-        while(len(Vector_Quieta_Manual)<len(Vector_Nado_Manual)):
-            Vector_Quieta_Manual.append(0)
     if(len(Vector_Nado_Manual)<len(Vector_Quieta_Manual)):
         while(len(Vector_Nado_Manual)<len(Vector_Quieta_Manual)):
             Vector_Nado_Manual.append(0)
+
+    if(len(Vector_Nado_Manual)<len(Vector_Escalada_Manual)):
+        while(len(Vector_Nado_Manual)<len(Vector_Escalada_Manual)):
+            Vector_Nado_Manual.append(0)
+
+    if(len(Vector_Quieta_Manual)<len(Vector_Nado_Manual)):
+        while(len(Vector_Quieta_Manual)<len(Vector_Nado_Manual)):
+            Vector_Quieta_Manual.append(0)
+    
+    if(len(Vector_Quieta_Manual)<len(Vector_Escalada_Manual)):
+        while(len(Vector_Quieta_Manual)<len(Vector_Escalada_Manual)):
+            Vector_Quieta_Manual.append(0)
+
+    if(len(Vector_Escalada_Manual)<len(Vector_Nado_Manual)):
+        while(len(Vector_Escalada_Manual)<len(Vector_Nado_Manual)):
+            Vector_Escalada_Manual.append(0)
+    
+    if(len(Vector_Escalada_Manual)<len(Vector_Quieta_Manual)):
+        while(len(Vector_Escalada_Manual)<len(Vector_Quieta_Manual)):
+            Vector_Escalada_Manual.append(0)
 
     workbook = xlsxwriter.Workbook(url)
     worksheet = workbook.add_worksheet()
@@ -633,34 +721,42 @@ def exportar_Manual():
     worksheet.write(fila,0, 'Tiempo Total Reposo (segundos)')
     worksheet.write(fila,1, round(Manual_quieta,2))
     fila = fila+1
+    worksheet.write(fila,0, 'Tiempo Total Escalada (segundos)')
+    worksheet.write(fila,1, round(Manual_escalada,2))
+    fila = fila+1
     worksheet.write(fila,0, 'Porcentaje Nado (%)')
     worksheet.write(fila,1, round(Porcentaje_Manual_Nado))
     fila = fila+1
     worksheet.write(fila,0, 'Porcentaje Reposo (%)')
     worksheet.write(fila,1, round(Porcentaje_Manual_Quieta))
     fila = fila+1
+    worksheet.write(fila,0, 'Porcentaje Escalada (%)')
+    worksheet.write(fila,1, round(Porcentaje_Manual_Escalado))
+    fila = fila+1
     fila = fila+1
 
     worksheet.write(fila,0, 'Tiempos Nado (segundos)')
     worksheet.write(fila,1, 'Tiempos Reposo (segundos)')
+    worksheet.write(fila,2, 'Tiempos Escalada (segundos)')
     fila = fila+1
     for x in range (0,len(Vector_Nado_Manual)):
         worksheet.write(fila,0, Vector_Nado_Manual[x])
         worksheet.write(fila,1, Vector_Quieta_Manual[x])
+        worksheet.write(fila,2, Vector_Escalada_Manual[x])
         fila = fila+1
     
     fila = fila+1
     worksheet.write(fila,0, 'Velocidades (pixels/s)')
     fila = fila+1
     for y in range (0,len(mod_manual)):
-        worksheet.write(fila,0, mod_manual[y])
+        worksheet.write(fila,0, round(mod_manual[y]))
         fila = fila+1
 
     workbook.close()
 
 def selectVideo_Manual():
     global Manual_video_name
-    raiz.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("mp4","*.mp4"),("MTS","*.MTS"),("all files","*.*")))
+    raiz.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("MTS","*.MTS"),("mp4","*.mp4"),("all files","*.*")))
     print(raiz.filename)
     url = raiz.filename
     Manual_video_name = url 
@@ -684,9 +780,7 @@ def stream(canvas):
     thread.start()
 
 def exec_manual(video,canvas1):
-    global mod_manual, Manual_nado, Manual_quieta, Vector_Nado_Manual, Vector_Quieta_Manual, stopManual,seleccion,waitKey_fps,tiempoS
-
-
+    global mod_manual, Manual_nado, Manual_quieta, Manual_escalada ,Vector_Nado_Manual, Vector_Quieta_Manual,Vector_Escalada_Manual ,stopManual,seleccion,waitKey_fps,tiempoS
     ### FRAME 7 ###
     frame7.config(width = "1440", height="1024", bg="#242424")
 
@@ -702,13 +796,30 @@ def exec_manual(video,canvas1):
     tiempo.place(x=1000, y=410)
 
     contNado = Label(frame7, text = "Tiempo Nado: ",bg="#242424", foreground="white",font=("Helvetica", 15))
-    contNado.place(x=580, y=450)
+    contNado.place(x=580, y=440)
     contadorNado = Label(frame7,bg="#242424", foreground="white",font=("Helvetica", 15),textvariable=Manual_nadoS)
-    contadorNado.place(x=750, y=450)
+    contadorNado.place(x=750, y=440)
     contQuieta = Label(frame7, text = "Tiempo Reposo: ",bg="#242424", foreground="white",font=("Helvetica", 15))
-    contQuieta.place(x=580, y=500)
+    contQuieta.place(x=580, y=470)
     contadorQuieta = Label(frame7,bg="#242424", foreground="white",font=("Helvetica", 15),textvariable=Manual_quietaS)
+    contadorQuieta.place(x=750, y=470)
+    contQuieta = Label(frame7, text = "Tiempo Escalada: ",bg="#242424", foreground="white",font=("Helvetica", 15))
+    contQuieta.place(x=580, y=500)
+    contadorQuieta = Label(frame7,bg="#242424", foreground="white",font=("Helvetica", 15),textvariable=Manual_escaladaS)
     contadorQuieta.place(x=750, y=500)
+
+
+    btnReposo = Button(frame7, text="Reposo")
+    btnReposo.config(width="9", height="2",font=("Helvetica", 14), bg="#3F3F3F", foreground="white", command = contador_reposo)
+    btnReposo.place(x=450, y=550)
+
+    btnNado = Button(frame7, text="Nado")
+    btnNado.config(width="9", height="2",font=("Helvetica", 14), bg="#3F3F3F", foreground="white", command = contador_nado)
+    btnNado.place(x=600, y=550)
+
+    btnEscalada = Button(frame7, text="Escalada")
+    btnEscalada.config(width="9", height="2",font=("Helvetica", 14), bg="#3F3F3F", foreground="white", command = contador_escalada)
+    btnEscalada.place(x=750, y=550)
 
     btnParar = Button(frame7, text="Parar")
     btnParar.config(width="10", height="2",font=("Helvetica", 14), bg="#3F3F3F", foreground="white", command = parar_Manual)
@@ -749,6 +860,9 @@ def exec_manual(video,canvas1):
     pantalla = ctypes.windll.user32
     pantalla.SetProcessDPIAware()
     ancho, alto = pantalla.GetSystemMetrics(0), pantalla.GetSystemMetrics(1)
+
+    minutos = 0
+    segundos = 0
     ####Fin Variables Locales ####
 
     cap = cv2.VideoCapture(video)
@@ -759,7 +873,10 @@ def exec_manual(video,canvas1):
         
         cv2.waitKey(waitKey_fps) & 0xFF
         posVideo = cap.get(cv2.CAP_PROP_POS_MSEC)
-        tiempoS.set(str(round(posVideo/1000))+" s")
+        posVideo = posVideo/1000
+        minutos = posVideo/60
+        segundos = posVideo % 60
+        tiempoS.set(str(int(minutos))+":"+str(int(segundos)))
  
         if stopManual == True:
             MutexManual.release()
@@ -873,37 +990,45 @@ def exec_manual(video,canvas1):
                 MutexManual.release()
                 cap.release()
                 cv2.destroyAllWindows()
-                
-
+        else:
+            MutexManual.release()
+            cap.release()
+            cv2.destroyAllWindows()
     cap.release()
     cv2.destroyAllWindows()
 
 def to_Init_Manual():
-    global Manual_video_name, seleccion,mod_manual, Manual_nado, Manual_quieta, Manual_cInit, Manual_cFin, Manual_inicializado, Manual_nadando, Manual_quietaB, stopManual, Porcentaje_Manual_Nado, Porcentaje_Manual_Quieta, Vector_Nado_Manual, Vector_Quieta_Manual,boolManual
+    global Manual_video_name, seleccion,mod_manual, Manual_nado, Manual_quieta, Manual_escalada, Manual_cInit, Manual_cFin, Manual_inicializado, Manual_nadando, Manual_quietaB,Manual_escaladaB, stopManual, Porcentaje_Manual_Escalado,Porcentaje_Manual_Nado, Porcentaje_Manual_Quieta, Vector_Nado_Manual, Vector_Quieta_Manual,Vector_Escalada_Manual,boolManual
     
     #limpar variables#
     Manual_video_name = ""
     seleccion = False
     Manual_nado = 0
     Manual_quieta = 0
+    Manual_escalada = 0
     Manual_cInit = 0
     Manual_cFin = 0
     mod_manual = [0]
     Manual_inicializado = False
     Manual_nadando = False
     Manual_quietaB = False
+    Manual_escaladaB = False
     stopManual = True
     Porcentaje_Manual_Nado = 0
     Porcentaje_Manual_Quieta = 0
+    Porcentaje_Manual_Escalado = 0
     Vector_Nado_Manual.clear()
     Vector_Quieta_Manual.clear()
+    Vector_Escalada_Manual.clear()
     boolManual = False
 
     Manual_nadoS.set(str(Manual_nado)+" s")
     Manual_quietaS.set(str(Manual_quieta)+" s")
+    Manual_escaladaS.set(str(Manual_quieta)+" s")
     Manual_Porcentaje_NadoS.set(str(Porcentaje_Manual_Nado)+" %")
     Manual_Porcentaje_QuietaS.set(str(Porcentaje_Manual_Quieta)+" %")
-
+    Manual_Porcentaje_escaladaS.set(str(Porcentaje_Manual_Quieta)+" %")
+    
     frame8.pack_forget()
     frame1.pack()
 
@@ -1024,9 +1149,7 @@ btnSeleccionarF6.place(x=500, y=600)
 
 ##FRAME 7 implementado en exec_manual##
 frame7 = Frame()
-btnIniciar = Button(frame7, text="Iniciar")
-btnIniciar.config(width="30", height="2",font=("Helvetica", 14), bg="#3F3F3F", foreground="white", command = contador)
-btnIniciar.place(x=500, y=550)
+
 
 ##FIN FRAME7##
 
@@ -1039,13 +1162,17 @@ TituloAutomatico = Label(frame8,text="Test Manual de Porsolt",bg="#242424",foreg
 TituloAutomatico.place(x=480, y=55)
 
 contNado = Label(frame8, text = "Tiempo Nado: ",bg="#242424", foreground="white",font=("Helvetica", 12))
-contNado.place(x=550, y=200)
+contNado.place(x=550, y=150)
 contadorNado = Label(frame8,bg="#242424", foreground="white",font=("Helvetica", 12),textvariable=Manual_nadoS)
-contadorNado.place(x=720, y=200)
+contadorNado.place(x=720, y=150)
 contQuieta = Label(frame8, text = "Tiempo Reposo: ",bg="#242424", foreground="white",font=("Helvetica", 12))
-contQuieta.place(x=550, y=250)
+contQuieta.place(x=550, y=200)
 contadorQuieta = Label(frame8,bg="#242424", foreground="white",font=("Helvetica", 12),textvariable=Manual_quietaS)
-contadorQuieta.place(x=720, y=250)
+contadorQuieta.place(x=720, y=200)
+contEscalada = Label(frame8, text = "Tiempo Escalada: ",bg="#242424", foreground="white",font=("Helvetica", 12))
+contEscalada.place(x=550, y=250)
+contadorEscalada = Label(frame8,bg="#242424", foreground="white",font=("Helvetica", 12),textvariable=Manual_escaladaS)
+contadorEscalada.place(x=720, y=250)
 porNado = Label(frame8, text = "Porcentaje Nado: ",bg="#242424", foreground="white",font=("Helvetica", 12))
 porNado.place(x=550, y=300)
 porcentajeNado = Label(frame8,bg="#242424", foreground="white",font=("Helvetica", 12),textvariable = Manual_Porcentaje_NadoS)
@@ -1054,6 +1181,10 @@ porcQuieta = Label(frame8, text = "Porcentaje Reposo: ",bg="#242424", foreground
 porcQuieta.place(x=550, y=350)
 porcentajeQuieta = Label(frame8,bg="#242424", foreground="white",font=("Helvetica", 12),textvariable = Manual_Porcentaje_QuietaS)
 porcentajeQuieta.place(x=720, y=350)
+porcEscalada = Label(frame8, text = "Porcentaje Escalada: ",bg="#242424", foreground="white",font=("Helvetica", 12))
+porcEscalada.place(x=550, y=400)
+porcentajeEscalada = Label(frame8,bg="#242424", foreground="white",font=("Helvetica", 12),textvariable = Manual_Porcentaje_escaladaS)
+porcentajeEscalada.place(x=720, y=400)
 
 
 btnExportarF8 = Button(frame8, text="Exportar Datos")
