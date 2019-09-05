@@ -169,38 +169,38 @@ def exec(canvas1, video ):
     ### REAJUSTE DEL FRAME4 ###
     frame4.config(width = "2100", height="1300", bg="#242424")
     TituloF4 = Label(frame4,text="Test Automatico de Porsolt",bg="#242424",foreground="white",font=("Helvetica", 20))
-    TituloF4.place(x=530, y=55)
+    TituloF4.place(x=530, y=45)
     
     canvas = Label(frame4)
-    canvas.config(width="70",height="15", bg="#242424")
-    canvas.place(x=300, y=180)
+    canvas.config(width="840",height="420", bg="#242424")
+    canvas.place(x=235, y=100)
 
     tiempoF4 = Label(frame4,bg="#242424", foreground="white",font=("Helvetica", 15),textvariable=tiempo_AutomaticoS)
-    tiempoF4.place(x=1000, y=410)
+    tiempoF4.place(x=1200, y=500)
 
-    IndicadorTxt = Label(frame4, text="Nadando", bg="#242424", foreground="white",font=("Helvetica", 12))
-    IndicadorTxt.place(x=580,y=450)
+    IndicadorTxt = Label(frame4, text="Nadando", bg="#242424", foreground="white",font=("Helvetica", 14))
+    IndicadorTxt.place(x=580,y=545)
 
     Indicador = Label(frame4, bg="#3847CD")
     Indicador.config(width="2", height="1")
-    Indicador.place(x=750,y=450)
+    Indicador.place(x=750,y=545)
 
-    contNado2 = Label(frame4, text = "Tiempo Nado: ",bg="#242424", foreground="white",font=("Helvetica", 12))
-    contNado2.place(x=580, y=500)
-    contadorNado2 = Label(frame4,bg="#242424", foreground="white",font=("Helvetica", 12),textvariable=Automatico_nadoS)
-    contadorNado2.place(x=750, y=500)
-    contQuieta2 = Label(frame4, text = "Tiempo Reposo: ",bg="#242424", foreground="white",font=("Helvetica", 12))
-    contQuieta2.place(x=580, y=550)
-    contadorQuieta2 = Label(frame4,bg="#242424", foreground="white",font=("Helvetica", 12),textvariable=Automatico_quietaS)
-    contadorQuieta2.place(x=750, y=550)
+    contNado2 = Label(frame4, text = "Tiempo Nado: ",bg="#242424", foreground="white",font=("Helvetica", 14))
+    contNado2.place(x=580, y=575)
+    contadorNado2 = Label(frame4,bg="#242424", foreground="white",font=("Helvetica", 14),textvariable=Automatico_nadoS)
+    contadorNado2.place(x=750, y=575)
+    contQuieta2 = Label(frame4, text = "Tiempo Reposo: ",bg="#242424", foreground="white",font=("Helvetica", 14))
+    contQuieta2.place(x=580, y=605)
+    contadorQuieta2 = Label(frame4,bg="#242424", foreground="white",font=("Helvetica", 14),textvariable=Automatico_quietaS)
+    contadorQuieta2.place(x=750, y=605)
 
     btnReiniciar = Button(frame4, text="Reiniciar")
     btnReiniciar.config(width="17", height="2",font=("Helvetica", 15), bg="#3F3F3F", foreground="white", command = reiniciar_Automatico)
-    btnReiniciar.place(x=120, y=550)
+    btnReiniciar.place(x=120, y=565)
     
     btnParar = Button(frame4, text="Parar")
     btnParar.config(width="17", height="2",font=("Helvetica", 15), bg="#3F3F3F", foreground="white", command = parar_Automatico)
-    btnParar.place(x=1000, y=550)
+    btnParar.place(x=1000, y=565)
     
     
     ### FIN REAJUSTE DEL FRAME4 ###
@@ -270,7 +270,7 @@ def exec(canvas1, video ):
             ret, frame_video = cap.read()
             if ret == True:
             
-                frame_video = cv2.resize(frame_video,(int(ancho/2),int(alto/2)))
+                frame_video = cv2.resize(frame_video,(int(ancho/1.4),int(alto/1.4)))
             
                 #Pasamos de BGR a HSV
                 hsv = cv2.cvtColor(frame_video,cv2.COLOR_BGR2HSV)
@@ -278,10 +278,10 @@ def exec(canvas1, video ):
                 #Comprobamos si estamos en el momento de seleccion
                 if(seleccion):
                     #cv2.imshow("image",frame)
-                    frame_image = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(frame_video,cv2.COLOR_BGR2RGB), "RGB").resize((600,300), Image.ANTIALIAS))
+                    frame_image = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(frame_video,cv2.COLOR_BGR2RGB), "RGB").resize((840,420), Image.ANTIALIAS))
                     canvas1.config(image=frame_image)
-                    canvas1.config(width="737",height="300")
-                    canvas1.place(x=126, y=180)
+                    canvas1.config(width="840",height="420")
+                    canvas1.place(x=235, y=100)
                     canvas1.image =frame_image
                     roiPos = cv2.selectROI(frame_video,True)
                     track_window.append(roiPos[0])
@@ -336,7 +336,7 @@ def exec(canvas1, video ):
                         #Obtenemos la diferencia entre el frame1 y el frame0
                         diferencia.append(abs(x0-x1))
                         diferencia.append(abs(y0-y1))
-                        #Obtenemos la velocidad tomando como tiempo un cuarto de un segundo (cada 6 frames)
+                        #Obtenemos la velocidad tomando como tiempo un cuarto de un segundo (cada 5 frames)
                         velocidad.append(diferencia[(len(diferencia)-2)]/0.5)
                         velocidad.append(diferencia[(len(diferencia)-1)]/0.5)
                         #Obtenemos la velocidad total
@@ -406,16 +406,16 @@ def exec(canvas1, video ):
                     contadorFPS = contadorFPS + 1
                     #cv2.putText(res, str(mod[len(mod)-1]),(30,120),font,2, (130,50,200),3,cv2.LINE_AA)
             
-                    frame_image2 = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(res,cv2.COLOR_BGR2RGB),"RGB").resize((600,300), Image.ANTIALIAS))
+                    frame_image2 = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(res,cv2.COLOR_BGR2RGB),"RGB").resize((840,420), Image.ANTIALIAS))
                     canvas.config(image=frame_image2)
-                    canvas.config(width="737",height="300")
-                    canvas.place(x=300, y=130)
+                    canvas.config(width="840",height="420")
+                    canvas.place(x=235, y=100)
                     canvas.image = frame_image2
                 else:
-                    ph = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(frame_video,cv2.COLOR_BGR2RGB),"RGB").resize((600,300), Image.ANTIALIAS))
+                    ph = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(frame_video,cv2.COLOR_BGR2RGB),"RGB").resize((840,420), Image.ANTIALIAS))
                     canvas1.config(image=ph)
-                    canvas1.config(width="737",height="300")
-                    canvas1.place(x=300, y=130)
+                    canvas1.config(width="840",height="420")
+                    canvas1.place(x=235, y=100)
                     canvas1.image = ph
                 
             else:
@@ -465,7 +465,7 @@ def parar_Automatico():
     frame5.pack()
     
     TituloAutomatico = Label(frame5,text="Test Automatico de Porsolt",bg="#242424",foreground="white",font=("Helvetica", 20))
-    TituloAutomatico.place(x=480, y=55)
+    TituloAutomatico.place(x=480, y=45)
 
     contNado = Label(frame5, text = "Tiempo Nado: ",bg="#242424", foreground="white",font=("Helvetica", 12))
     contNado.place(x=550, y=200)
@@ -650,15 +650,18 @@ def contador_nado():
         Manual_quietaS.set(str(round(Manual_quieta,2))+" s")
     
     if((Manual_nadando == False) and (Manual_escaladaB == False) and (Manual_quietaB == False)):
-        Manual_nado = True
+        Manual_nadando = True
         Manual_cInit = time()
 
 def parar_Manual():
     global Manual_nado, Manual_quieta, Manual_escalada, Porcentaje_Manual_Nado, Porcentaje_Manual_Quieta,Porcentaje_Manual_Escalado ,stopManual 
     frame7.pack_forget()
     Manual_Total = Manual_nado + Manual_quieta + Manual_escalada
-
-    Porcentaje_Manual_Nado = Manual_nado/Manual_Total*100
+    
+    if Manual_nado != 0:
+        Porcentaje_Manual_Nado = Manual_nado/Manual_Total*100
+    else:
+        Porcentaje_Manual_Nado = 0
     
     if Manual_quieta != 0:
         Porcentaje_Manual_Quieta = Manual_quieta/Manual_Total*100
@@ -784,50 +787,50 @@ def exec_manual(video,canvas1):
     ### FRAME 7 ###
     frame7.config(width = "1440", height="1024", bg="#242424")
 
-    TituloAutomatico = Label(frame7,text="Test Manual de Porsolt",bg="#242424",foreground="white",font=("Helvetica", 20))
-    TituloAutomatico.place(x=530, y=55)
+    TituloAutomatico = Label(frame7,text="Test Automatico de Porsolt",bg="#242424",foreground="white",font=("Helvetica", 20))
+    TituloAutomatico.place(x=530, y=45)
 
 
     canvas4 = Label(frame7)
-    canvas4.config(width="70",height="15",bg="#242424")
-    canvas4.place(x=80, y=150)
+    canvas4.config(width="840",height="420",bg="#242424")
+    canvas4.place(x=235, y=100)
 
     tiempo = Label(frame7,bg="#242424", foreground="white",font=("Helvetica", 15),textvariable=tiempoS)
-    tiempo.place(x=1000, y=410)
+    tiempo.place(x=1200, y=500)
 
-    contNado = Label(frame7, text = "Tiempo Nado: ",bg="#242424", foreground="white",font=("Helvetica", 15))
-    contNado.place(x=580, y=440)
-    contadorNado = Label(frame7,bg="#242424", foreground="white",font=("Helvetica", 15),textvariable=Manual_nadoS)
-    contadorNado.place(x=750, y=440)
-    contQuieta = Label(frame7, text = "Tiempo Reposo: ",bg="#242424", foreground="white",font=("Helvetica", 15))
-    contQuieta.place(x=580, y=470)
-    contadorQuieta = Label(frame7,bg="#242424", foreground="white",font=("Helvetica", 15),textvariable=Manual_quietaS)
-    contadorQuieta.place(x=750, y=470)
-    contQuieta = Label(frame7, text = "Tiempo Escalada: ",bg="#242424", foreground="white",font=("Helvetica", 15))
-    contQuieta.place(x=580, y=500)
-    contadorQuieta = Label(frame7,bg="#242424", foreground="white",font=("Helvetica", 15),textvariable=Manual_escaladaS)
-    contadorQuieta.place(x=750, y=500)
+    contNado = Label(frame7, text = "Tiempo Nado: ",bg="#242424", foreground="white",font=("Helvetica", 14))
+    contNado.place(x=580, y=525)
+    contadorNado = Label(frame7,bg="#242424", foreground="white",font=("Helvetica", 14),textvariable=Manual_nadoS)
+    contadorNado.place(x=750, y=525)
+    contQuieta = Label(frame7, text = "Tiempo Reposo: ",bg="#242424", foreground="white",font=("Helvetica", 14))
+    contQuieta.place(x=580, y=555)
+    contadorQuieta = Label(frame7,bg="#242424", foreground="white",font=("Helvetica", 14),textvariable=Manual_quietaS)
+    contadorQuieta.place(x=750, y=555)
+    contQuieta = Label(frame7, text = "Tiempo Escalada: ",bg="#242424", foreground="white",font=("Helvetica", 14))
+    contQuieta.place(x=580, y=585)
+    contadorQuieta = Label(frame7,bg="#242424", foreground="white",font=("Helvetica", 14),textvariable=Manual_escaladaS)
+    contadorQuieta.place(x=750, y=585)
 
 
     btnReposo = Button(frame7, text="Reposo")
     btnReposo.config(width="9", height="2",font=("Helvetica", 14), bg="#3F3F3F", foreground="white", command = contador_reposo)
-    btnReposo.place(x=450, y=550)
+    btnReposo.place(x=450, y=620)
 
     btnNado = Button(frame7, text="Nado")
     btnNado.config(width="9", height="2",font=("Helvetica", 14), bg="#3F3F3F", foreground="white", command = contador_nado)
-    btnNado.place(x=600, y=550)
+    btnNado.place(x=600, y=620)
 
     btnEscalada = Button(frame7, text="Escalada")
     btnEscalada.config(width="9", height="2",font=("Helvetica", 14), bg="#3F3F3F", foreground="white", command = contador_escalada)
-    btnEscalada.place(x=750, y=550)
+    btnEscalada.place(x=750, y=620)
 
     btnParar = Button(frame7, text="Parar")
     btnParar.config(width="10", height="2",font=("Helvetica", 14), bg="#3F3F3F", foreground="white", command = parar_Manual)
-    btnParar.place(x=1000, y=550)
+    btnParar.place(x=1000, y=620)
 
     btnReiniciarF7 = Button(frame7, text="Reiniciar")
     btnReiniciarF7.config(width="10", height="2",font=("Helvetica", 14), bg="#3F3F3F", foreground="white", command = reiniciar_Manual)
-    btnReiniciarF7.place(x=220, y=550)
+    btnReiniciarF7.place(x=220, y=620)
     ### FIN FRAME 7 ###
 
     #### Inicio Variables Locales ####
@@ -884,7 +887,7 @@ def exec_manual(video,canvas1):
             ret, frame_video = cap.read()
             if ret == True:
             
-                frame_video = cv2.resize(frame_video,(int(ancho/2),int(alto/2)))
+                frame_video = cv2.resize(frame_video,(int(ancho/1.4),int(alto/1.4)))
             
                 #Pasamos de BGR a HSV
                 hsv = cv2.cvtColor(frame_video,cv2.COLOR_BGR2HSV)
@@ -892,10 +895,10 @@ def exec_manual(video,canvas1):
                 #Comprobamos si estamos en el momento de seleccion
                 if(seleccion):
                     #cv2.imshow("image",frame)
-                    frame_image = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(frame_video,cv2.COLOR_BGR2RGB), "RGB").resize((600,300), Image.ANTIALIAS))
+                    frame_image = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(frame_video,cv2.COLOR_BGR2RGB), "RGB").resize((840,420), Image.ANTIALIAS))
                     canvas1.config(image=frame_image)
-                    canvas1.config(width="737",height="300")
-                    canvas1.place(x=126, y=180)
+                    canvas1.config(width="840",height="420")
+                    canvas1.place(x=235, y=100)
                     canvas1.image =frame_image
                     roiPos = cv2.selectROI(frame_video,True)
                     track_window.append(roiPos[0])
@@ -974,16 +977,16 @@ def exec_manual(video,canvas1):
                     contadorFPS = contadorFPS + 1
                     #cv2.putText(res, str(mod[len(mod)-1]),(30,120),font,2, (130,50,200),3,cv2.LINE_AA)
             
-                    frame_image2 = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(res,cv2.COLOR_BGR2RGB),"RGB").resize((600,300), Image.ANTIALIAS))
+                    frame_image2 = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(res,cv2.COLOR_BGR2RGB),"RGB").resize((840,420), Image.ANTIALIAS))
                     canvas4.config(image=frame_image2)
-                    canvas4.config(width="737",height="300")
-                    canvas4.place(x=300, y=130)
+                    canvas4.config(width="840",height="420")
+                    canvas4.place(x=235, y=100)
                     canvas4.image = frame_image2
                 else:
-                    ph = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(frame_video,cv2.COLOR_BGR2RGB),"RGB").resize((600,300), Image.ANTIALIAS))
+                    ph = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(frame_video,cv2.COLOR_BGR2RGB),"RGB").resize((840,420), Image.ANTIALIAS))
                     canvas1.config(image=ph)
-                    canvas1.config(width="737",height="300")
-                    canvas1.place(x=300, y=130)
+                    canvas1.config(width="840",height="420")
+                    canvas1.place(x=235, y=100)
                     canvas1.image = ph
                 
             else:
@@ -1066,7 +1069,7 @@ frame2.config(width = "1440", height="1024", bg="#242424")
 #frame2.pack()
 
 Titulo = Label(frame2,text="Test Automatico de Porsolt",bg="#242424",foreground="white",font=("Helvetica", 20))
-Titulo.place(x=500, y=50)
+Titulo.place(x=500, y=45)
 
 img3 = Image.open("R1.png")
 img3 = img3.resize((242,331), Image.ANTIALIAS)
@@ -1097,14 +1100,14 @@ frame3.config(width = "1440", height="1024", bg="#242424")
 #frame3.pack()
 
 TituloF3 = Label(frame3,text="Test Automatico de Porsolt",bg="#242424",foreground="white",font=("Helvetica", 20))
-TituloF3.place(x=500, y=50)
+TituloF3.place(x=500, y=45)
 
 canvas = Label(frame3)
-canvas.config(width="80",height="35", bg="#242424")
-canvas.place(x=1000, y=100)
+canvas.config(width="840",height="420", bg="#242424")
+canvas.place(x=235, y=100)
 
 Instrucciones = Label(frame3,text="Selecciona la marca del sujeto y presiona enter.",bg="#242424",foreground="white",font=("Helvetica", 12))
-Instrucciones.place(x=500, y=520)
+Instrucciones.place(x=500, y=540)
 
 btnSeleccionarF3 = Button(frame3, text="Seleccionar")
 btnSeleccionarF3.config(width="30", height="2",font=("Helvetica", 14), bg="#3F3F3F", foreground="white",command = seleccionar)
@@ -1117,8 +1120,8 @@ frame4.config(width = "1440", height="1024", bg="#242424")
 #frame4.pack()
 
 canvas1 = Label(frame4)
-canvas1.config(width="70",height="15",bg="#242424")
-canvas1.place(x=80, y=150)
+canvas1.config(width="840",height="420",bg="#242424")
+canvas1.place(x=235, y=100)
 
 ##FIN FRAME4##
 
@@ -1131,15 +1134,15 @@ frame6 = Frame()
 frame6.config(width = "1440", height="1024", bg="#242424")
 #frame6.pack()
 
-TituloAutomatico = Label(frame6,text="Test Manual de Porsolt",bg="#242424",foreground="white",font=("Helvetica", 20))
-TituloAutomatico.place(x=500, y=50)
+TituloAutomatico = Label(frame6,text="Test Automatico de Porsolt",bg="#242424",foreground="white",font=("Helvetica", 20))
+TituloAutomatico.place(x=500, y=45)
 
 canvas3 = Label(frame6)
-canvas3.config(width="80",height="35",bg="#242424")
-canvas3.place(x=1000, y=100)
+canvas3.config(width="840",height="420",bg="#242424")
+canvas3.place(x=235, y=100)
 
 Instrucciones = Label(frame6,text="Selecciona la marca del sujeto y presiona enter.",bg="#242424",foreground="white",font=("Helvetica", 12))
-Instrucciones.place(x=500, y=520)
+Instrucciones.place(x=500, y=540)
 
 btnSeleccionarF6 = Button(frame6, text="Seleccionar")
 btnSeleccionarF6.config(width="30", height="2",font=("Helvetica", 14), bg="#3F3F3F", foreground="white", command = seleccionar)
@@ -1158,8 +1161,8 @@ frame8 = Frame()
 frame8.config(width = "1440", height="1024", bg="#242424")
 #frame8.pack()
 
-TituloAutomatico = Label(frame8,text="Test Manual de Porsolt",bg="#242424",foreground="white",font=("Helvetica", 20))
-TituloAutomatico.place(x=480, y=55)
+TituloAutomatico = Label(frame8,text="Test Automatico de Porsolt",bg="#242424",foreground="white",font=("Helvetica", 20))
+TituloAutomatico.place(x=480, y=45)
 
 contNado = Label(frame8, text = "Tiempo Nado: ",bg="#242424", foreground="white",font=("Helvetica", 12))
 contNado.place(x=550, y=150)
