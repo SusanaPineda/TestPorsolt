@@ -346,7 +346,7 @@ def exec(canvas1, video ):
                         velTotal = np.linalg.norm(velTotal)
                         mod.append(velTotal)
                         #Comprobamos la velocidad y contamos el tiempo
-                        if (velTotal>8):
+                        if (velTotal>13):
                             if(nadandoBool):
                                
                                 Automatico_nado = round(Automatico_nado + 0.2 ,2)
