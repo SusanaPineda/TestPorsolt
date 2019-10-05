@@ -52,6 +52,12 @@ mod_manual = [0]
 seleccion_Manual = False
 Manual_cInit = 0
 Manual_cFin = 0
+p0 = 0
+p1 = 0
+escrito = False
+leido = False
+pulsado = False
+s = 0
 ### VARIABLES EXCEL ###
 Porcentaje_Manual_Nado = 0
 Porcentaje_Manual_Quieta = 0
@@ -575,83 +581,94 @@ def manual():
 
 
 def contador_reposo():
-    global Manual_nadando, Manual_quietaB, Manual_escaladaB, Manual_cInit, Manual_cFin,Manual_nado, Manual_quieta, Manual_escalada,Vector_Escalada_Manual,Vector_Nado_Manual,Manual_escaladaS,Manual_nadoS,Manual_quietaS
-    if(Manual_nadando == True):
-        Manual_nadando = False
-        Manual_quietaB = True
-        Manual_cFin = time() - Manual_cInit
-        Manual_nado = Manual_nado + Manual_cFin
-        Vector_Nado_Manual.append(round(Manual_cFin,2))
-        Manual_cInit = time()
+    global Manual_nadando, Manual_quietaB, Manual_escaladaB, Manual_cInit, Manual_cFin,Manual_nado, Manual_quieta, Manual_escalada,Vector_Escalada_Manual,Vector_Nado_Manual,Manual_escaladaS,Manual_nadoS,Manual_quietaS, p0,p1,escrito,leido,pulsado,s
+    if(escrito == False):
+        pulsado = True
+        s = 0
+    else:
+        if(Manual_nadando == True):
+            Manual_nadando = False
+            Manual_quietaB = True
+            Manual_cFin = p1-p0
+            Manual_nado = Manual_nado + Manual_cFin
+            Vector_Nado_Manual.append(round(Manual_cFin,2))
 
-        Manual_nadoS.set(str(round(Manual_nado,2))+" s")
+            Manual_nadoS.set(str(round(Manual_nado,2))+" s")
 
-    if(Manual_escaladaB == True):
-        Manual_escaladaB = False
-        Manual_quietaB = True
-        Manual_cFin = time() - Manual_cInit
-        Manual_escalada = Manual_escalada + Manual_cFin
-        Vector_Escalada_Manual.append(round(Manual_cFin,2))
-        Manual_cInit = time()
+        if(Manual_escaladaB == True):
+            Manual_escaladaB = False
+            Manual_quietaB = True
+            Manual_cFin = p1-p0
+            Manual_escalada = Manual_escalada + Manual_cFin
+            Vector_Escalada_Manual.append(round(Manual_cFin,2))
 
-        Manual_escaladaS.set(str(round(Manual_escalada,2))+" s")
-    
-    if((Manual_nadando == False) and (Manual_escaladaB == False) and (Manual_quietaB == False)):
-        Manual_quietaB = True
-        Manual_cInit = time()
+            Manual_escaladaS.set(str(round(Manual_escalada,2))+" s")
+        
+        if((Manual_nadando == False) and (Manual_escaladaB == False) and (Manual_quietaB == False)):
+            Manual_quietaB = True
+        leido = True
+        escrito = False
 
 def contador_escalada():
-    global Manual_nadando, Manual_quietaB, Manual_escaladaB, Manual_cInit, Manual_cFin,Manual_nado, Manual_quieta, Manual_escalada,Vector_Escalada_Manual,Vector_Nado_Manual,Manual_escaladaS,Manual_nadoS,Manual_quietaS
-    if(Manual_nadando == True):
-        Manual_nadando = False
-        Manual_escaladaB = True
-        Manual_cFin = time() - Manual_cInit
-        Manual_nado = Manual_nado + Manual_cFin
-        Vector_Nado_Manual.append(round(Manual_cFin,2))
-        Manual_cInit = time()
-
-        Manual_nadoS.set(str(round(Manual_nado,2))+" s")
-
-    if(Manual_quietaB == True):
-        Manual_quietaB = False
-        Manual_escaladaB = True
-        Manual_cFin = time() - Manual_cInit
-        Manual_quieta = Manual_quieta + Manual_cFin
-        Vector_Quieta_Manual.append(round(Manual_cFin,2))
-        Manual_cInit = time()
-
-        Manual_quietaS.set(str(round(Manual_quieta,2))+" s")
+    global Manual_nadando, Manual_quietaB, Manual_escaladaB, Manual_cInit, Manual_cFin,Manual_nado, Manual_quieta, Manual_escalada,Vector_Escalada_Manual,Vector_Nado_Manual,Manual_escaladaS,Manual_nadoS,Manual_quietaS,p0,p1,escrito,leido,pulsado,s
     
-    if((Manual_nadando == False) and (Manual_escaladaB == False) and (Manual_quietaB == False)):
-        Manual_escaladaB = True
-        Manual_cInit = time()
+    if(escrito == False):
+        pulsado = True
+        s = 1
+    else:
+        if(Manual_nadando == True):
+            Manual_nadando = False
+            Manual_escaladaB = True
+            Manual_cFin = p1-p0
+            Manual_nado = Manual_nado + Manual_cFin
+            Vector_Nado_Manual.append(round(Manual_cFin,2))
+
+            Manual_nadoS.set(str(round(Manual_nado,2))+" s")
+
+        if(Manual_quietaB == True):
+            Manual_quietaB = False
+            Manual_escaladaB = True
+            Manual_cFin = p1-p0
+            Manual_quieta = Manual_quieta + Manual_cFin
+            Vector_Quieta_Manual.append(round(Manual_cFin,2))
+
+            Manual_quietaS.set(str(round(Manual_quieta,2))+" s")
+        
+        if((Manual_nadando == False) and (Manual_escaladaB == False) and (Manual_quietaB == False)):
+            Manual_escaladaB = True
+        leido = True
+        escrito = False
     
 
 def contador_nado():
-    global Manual_nadando, Manual_quietaB, Manual_escaladaB, Manual_cInit, Manual_cFin,Manual_nado, Manual_quieta, Manual_escalada,Vector_Escalada_Manual,Vector_Nado_Manual,Manual_escaladaS,Manual_nadoS,Manual_quietaS
-    if(Manual_escaladaB == True):
-        Manual_escaladaB = False
-        Manual_nadando = True
-        Manual_cFin = time() - Manual_cInit
-        Manual_escalada = Manual_escalada + Manual_cFin
-        Vector_Escalada_Manual.append(round(Manual_cFin,2))
-        Manual_cInit = time()
-
-        Manual_escaladaS.set(str(round(Manual_escalada,2))+" s")
-
-    if(Manual_quietaB == True):
-        Manual_quietaB = False
-        Manual_nadando = True
-        Manual_cFin = time() - Manual_cInit
-        Manual_quieta = Manual_quieta + Manual_cFin
-        Vector_Quieta_Manual.append(round(Manual_cFin,2))
-        Manual_cInit = time()
-
-        Manual_quietaS.set(str(round(Manual_quieta,2))+" s")
+    global Manual_nadando, Manual_quietaB, Manual_escaladaB, Manual_cInit, Manual_cFin,Manual_nado, Manual_quieta, Manual_escalada,Vector_Escalada_Manual,Vector_Nado_Manual,Manual_escaladaS,Manual_nadoS,Manual_quietaS,p0,p1,escrito,leido,pulsado,s
     
-    if((Manual_nadando == False) and (Manual_escaladaB == False) and (Manual_quietaB == False)):
-        Manual_nadando = True
-        Manual_cInit = time()
+    if(escrito == False):
+        pulsado = True
+        s = 2
+    else:
+        if(Manual_escaladaB == True):
+            Manual_escaladaB = False
+            Manual_nadando = True
+            Manual_cFin = p1-p0
+            Manual_escalada = Manual_escalada + Manual_cFin
+            Vector_Escalada_Manual.append(round(Manual_cFin,2))
+
+            Manual_escaladaS.set(str(round(Manual_escalada,2))+" s")
+
+        if(Manual_quietaB == True):
+            Manual_quietaB = False
+            Manual_nadando = True
+            Manual_cFin = p1-p0
+            Manual_quieta = Manual_quieta + Manual_cFin
+            Vector_Quieta_Manual.append(round(Manual_cFin,2))
+
+            Manual_quietaS.set(str(round(Manual_quieta,2))+" s")
+        
+        if((Manual_nadando == False) and (Manual_escaladaB == False) and (Manual_quietaB == False)):
+            Manual_nadando = True
+        leido = True
+        escrito = False
 
 def parar_Manual():
     global Manual_nado, Manual_quieta, Manual_escalada, Porcentaje_Manual_Nado, Porcentaje_Manual_Quieta,Porcentaje_Manual_Escalado ,stopManual 
@@ -783,7 +800,7 @@ def stream(canvas):
     thread.start()
 
 def exec_manual(video,canvas1):
-    global mod_manual, Manual_nado, Manual_quieta, Manual_escalada ,Vector_Nado_Manual, Vector_Quieta_Manual,Vector_Escalada_Manual ,stopManual,seleccion,waitKey_fps,tiempoS
+    global mod_manual, Manual_nado, Manual_quieta, Manual_escalada ,Vector_Nado_Manual, Vector_Quieta_Manual,Vector_Escalada_Manual ,stopManual,seleccion,waitKey_fps,tiempoS,p0,p1,escrito,leido,pulsado,s
     ### FRAME 7 ###
     frame7.config(width = "1440", height="1024", bg="#242424")
 
@@ -879,6 +896,22 @@ def exec_manual(video,canvas1):
         posVideo = posVideo/1000
         minutos = posVideo/60
         segundos = posVideo % 60
+
+        if(pulsado):
+            p1 = posVideo
+            escrito = True
+            if(s == 0):
+                contador_reposo()
+            elif(s == 1):
+                contador_escalada()
+            else:
+                contador_nado()
+            pulsado = False
+
+        if(leido == True):
+            p0 = p1
+            leido = False
+
         tiempoS.set(str(int(minutos))+":"+str(int(segundos)))
  
         if stopManual == True:
